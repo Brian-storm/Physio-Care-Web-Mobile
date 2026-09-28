@@ -1,0 +1,60 @@
+{
+  "epics": [
+    {
+      "name": "Foundation",
+      "definition": "Project scaffold, seed data, design tokens and base component library.",
+      "stories": [
+        { "name": "US-1.1 Scaffold Next.js + FastAPI", "definition": "Initialize both projects and Docker Compose." },
+        { "name": "US-1.2 Seed squat exercise", "definition": "Define Exercise model and seed with squat." },
+        { "name": "US-1.3 Design tokens & components", "definition": "Establish design tokens and base UI components." }
+      ]
+    },
+    {
+      "name": "Squat-Exercise-Engine",
+      "definition": "MediaPipe pose detection → joint angles → squat form rules → real-time feedback.",
+      "stories": [
+        { "name": "US-2.1 MediaPipe detection", "definition": "PoseLandmarker setup, useCamera/usePose hooks." },
+        { "name": "US-2.2 Joint angle calculation", "definition": "Angle utility and squat-specific extraction." },
+        { "name": "US-2.3 Squat form rules", "definition": "SquatEngine class, evaluateFrame, FormFeedback type." },
+        { "name": "US-2.4 Score & cues", "definition": "Running score and cue prioritization." }
+      ]
+    },
+    {
+      "name": "Live-Session-UI",
+      "definition": "Camera feed with skeleton overlay, real-time feedback, start/stop/save.",
+      "stories": [
+        { "name": "US-3.1 Camera + skeleton overlay", "definition": "PoseCanvas and CameraView components." },
+        { "name": "US-3.2 Real-time feedback", "definition": "FeedbackPanel, ExerciseTimer, wiring." },
+        { "name": "US-3.3 Start/stop/save", "definition": "useSession hook, SessionSummary, auto-save." }
+      ]
+    },
+    {
+      "name": "Backend-API",
+      "definition": "FastAPI backend with SQLModel: Patient, Exercise, Session, Feedback CRUD.",
+      "stories": [
+        { "name": "US-4.1 Patient CRUD", "definition": "Patient model, endpoints, schemas." },
+        { "name": "US-4.2 Exercise CRUD", "definition": "Exercise model with form_rules JSON, endpoints." },
+        { "name": "US-4.3 Session & Feedback CRUD", "definition": "Session and Feedback models, endpoints." },
+        { "name": "US-4.4 Docs & tests", "definition": "OpenAPI docs, pytest fixtures, endpoint tests." }
+      ]
+    },
+    {
+      "name": "Patient-Dashboard",
+      "definition": "Session history, session detail with charts, exercise library browser.",
+      "stories": [
+        { "name": "US-5.1 Session history", "definition": "PatientSidebar, SessionHistoryList, data fetching." },
+        { "name": "US-5.2 Session detail", "definition": "AngleChart, FeedbackLog, SessionDetailPage." },
+        { "name": "US-5.3 Exercise library", "definition": "ExerciseCard, ExerciseLibraryGrid, data fetching." }
+      ]
+    },
+    {
+      "name": "PT-Dashboard",
+      "definition": "Patient list with stats, progress trends, session review.",
+      "stories": [
+        { "name": "US-6.1 Patient list", "definition": "PatientList component and data fetching." },
+        { "name": "US-6.2 Progress trend", "definition": "ScoreTrendChart, VolumeChart, PatientDetailPage." },
+        { "name": "US-6.3 Session review", "definition": "Reuse charts, session selector, SessionReviewPage." }
+      ]
+    }
+  ]
+}

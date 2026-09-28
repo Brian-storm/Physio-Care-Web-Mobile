@@ -1,0 +1,21 @@
+{
+  "id": "LSI-002",
+  "title": "Build CameraView component (video + canvas overlay composited)",
+  "content": "",
+  "stage": "backlog",
+  "risk": "medium",
+  "owner": "",
+  "agent": "",
+  "approvalRequired": true,
+  "createdAt": "2026-09-29",
+  "epic": "Live-Session-UI",
+  "userStory": "US-3.1 Camera + skeleton overlay",
+  "dependsOn": ["LSI-001"],
+  "order": 2,
+  "readiness": { "问题已釐清": true, "非目标已釐清": true, "验收标准可测试": false, "相关档案或搜寻入口已知": true, "允许范围已界定": true, "验证契约存在": false, "人工核准已记录": true },
+  "gates": { "product": false, "ui": false, "architecture": false, "security": false, "test": false, "code_review": false },
+  "links": {},
+  "refs": [],
+  "evidence": {},
+  "comments": []
+}
