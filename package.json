@@ -1,0 +1,8 @@
+{
+  "name": "physiocare",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "kanban": "node .physiocare-agent/tools/kanban/server.mjs"
+  }
+}

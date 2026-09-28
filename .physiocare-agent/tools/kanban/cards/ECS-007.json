@@ -4,6 +4,7 @@
   "content": "",
   "stage": "backlog",
   "risk": "low",
+  "track": "frontend",
   "owner": "",
   "agent": "",
   "approvalRequired": true,
@@ -12,10 +13,38 @@
   "userStory": "US-2.2 Joint angle calculation",
   "dependsOn": ["ECS-005","ECS-006"],
   "order": 3,
-  "readiness": { "问题已釐清": true, "非目标已釐清": true, "验收标准可测试": false, "相关档案或搜寻入口已知": true, "允许范围已界定": true, "验证契约存在": false, "人工核准已记录": true },
-  "gates": { "product": false, "ui": false, "architecture": false, "security": false, "test": false, "code_review": false },
-  "links": {},
+  "readiness": {
+    "problem_clear": true,
+    "non_goals_clear": true,
+    "acceptance_testable": false,
+    "files_known": true,
+    "scope_defined": true,
+    "verification_contract": false,
+    "human_approval_recorded": true
+  },
+  "gates": {
+    "product": false,
+    "ui": false,
+    "architecture": false,
+    "security": false,
+    "test": false,
+    "code_review": false
+  },
+  "links": {
+    "featureSpec": "",
+    "screenSpec": "",
+    "mockupDecision": "",
+    "taskCard": ".physiocare-agent/ai/artifacts/Squat-Exercise-Engine/task-cards/T2-2-3.md",
+    "verificationReport": "",
+    "pr": ""
+  },
   "refs": [],
-  "evidence": {},
+  "evidence": {
+    "commands": [],
+    "findings": [],
+    "residual": ""
+  },
+  "acceptance": [],
+  "files": [],
   "comments": []
 }

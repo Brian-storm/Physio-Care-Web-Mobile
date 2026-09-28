@@ -1,9 +1,10 @@
 {
   "id": "FND-001",
   "title": "Init Next.js 14 with TypeScript + TailwindCSS",
-  "content": "",
+  "content": "Create a new Next.js 14 project using create-next-app with TypeScript and TailwindCSS. Enable strict TypeScript mode. Configure @/ path alias in tsconfig.json. Set up PostCSS and ESLint. Add COOP/COEP headers for MediaPipe WASM compatibility in next.config.js. Create root layout and globals.css with Tailwind directives.",
   "stage": "backlog",
   "risk": "low",
+  "track": "frontend",
   "owner": "",
   "agent": "",
   "approvalRequired": true,
@@ -12,10 +13,38 @@
   "userStory": "US-1.1 Scaffold Next.js + FastAPI",
   "dependsOn": [],
   "order": 1,
-  "readiness": { "问题已釐清": true, "非目标已釐清": true, "验收标准可测试": false, "相关档案或搜寻入口已知": true, "允许范围已界定": true, "验证契约存在": false, "人工核准已记录": true },
-  "gates": { "product": false, "ui": false, "architecture": false, "security": false, "test": false, "code_review": false },
-  "links": {},
+  "readiness": {
+    "problem_clear": true,
+    "non_goals_clear": true,
+    "acceptance_testable": false,
+    "files_known": true,
+    "scope_defined": true,
+    "verification_contract": false,
+    "human_approval_recorded": true
+  },
+  "gates": {
+    "product": false,
+    "ui": false,
+    "architecture": false,
+    "security": false,
+    "test": false,
+    "code_review": false
+  },
+  "links": {
+    "featureSpec": "",
+    "screenSpec": "",
+    "mockupDecision": "",
+    "taskCard": ".physiocare-agent/ai/artifacts/Foundation/task-cards/T1-1-1.md",
+    "verificationReport": "",
+    "pr": ""
+  },
   "refs": [],
-  "evidence": {},
+  "evidence": {
+    "commands": [],
+    "findings": [],
+    "residual": ""
+  },
+  "acceptance": [],
+  "files": [],
   "comments": []
 }
