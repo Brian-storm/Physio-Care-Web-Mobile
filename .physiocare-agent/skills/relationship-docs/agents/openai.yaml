@@ -1,0 +1,4 @@
+interface:
+  display_name: "Relationship Docs"
+  short_description: "Use Mermaid and tables for relationship documentation."
+  default_prompt: "Create a clear relationship document using a Mermaid diagram plus a supporting table."

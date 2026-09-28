@@ -4,6 +4,8 @@
 
 PhysioCare is an AI-powered physiotherapy rehabilitation platform that uses **real-time computer vision** to analyze exercise form, track recovery progress, and connect patients with their physical therapists — all through a web browser.
 
+> **Reference Doc**: [Product Specification & Design Doc](https://docs.google.com/document/d/1NkwWAKEBurSSuzuMK2TcT-d5XZW05FrWQumRMQLk90g/edit?tab=t.ere75p8x38cl)
+
 ---
 
 ## The Problem
@@ -265,6 +267,48 @@ PhysioCare is **not an AI doctor**. It is a measurement tool — a digital gonio
 - All video processing happens on-device
 - Only anonymized joint data is stored
 - Designed for HIPAA/PDPO compliance
+
+---
+
+## AI Agent Governance
+
+This project uses the **Engine** framework under `.physiocare-agent/` to coordinate AI-assisted development through a structured workflow of skills, sub-agents, and review gates.
+
+### Skills
+
+| Skill | Purpose |
+|---|---|
+| **project-kickoff** | Decompose a new project into Epics → User Stories → Task cards |
+| **project-search** | Build task-specific context packs via minimal codebase search |
+| **spec-interrogation** | Convert vague requirements into structured specs with edge cases |
+| **ui-mockup-gate** | Produce multiple mockup variants for human selection before UI work |
+| **design-craft** | Enforce visual design discipline (type scale, spacing, color tokens) |
+| **implementation-plan** | Translate approved specs into scoped, AI-ready task cards |
+| **relationship-docs** | Document system relationships using Mermaid diagrams and tables |
+| **security-maintainability-review** | Review for correctness, privacy, auth, and architectural drift |
+| **test-verification** | Plan and aggregate verification evidence (builds, lint, tests) |
+
+### Sub-Agents
+
+| Agent | Role |
+|---|---|
+| **product-planner** | Clarifies product intent, user journeys, and acceptance criteria |
+| **ux-reviewer** | Reviews UI states, mobile/desktop fit, accessibility, design system consistency |
+| **architect** | Reviews technical plans for architecture fit and data contracts |
+| **security-reviewer** | Reviews for security, privacy, auth, and supply-chain risks |
+| **test-engineer** | Reviews test strategy, regression coverage, and verification evidence |
+
+### Workflow
+
+1. Context discovery → `project-search`
+2. Spec creation → `spec-interrogation`
+3. UI mockups → `ui-mockup-gate`
+4. Task cards → `implementation-plan`
+5. Implementation (one approved task at a time)
+6. Verification → `test-verification`
+7. Review gates → `security-maintainability-review` + sub-agents as needed
+
+All changes follow the **Definition of Ready** (before implementation) and **Definition of Done** (before sign-off) checklists in `.physiocare-agent/ai/process/`.
 
 ---
 
