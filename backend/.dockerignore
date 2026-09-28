@@ -1,0 +1,10 @@
+# PhysioCare — Docker build exclusions (backend)
+__pycache__
+*.pyc
+.venv
+venv
+.env
+Dockerfile
+.git
+*.db
+*.log

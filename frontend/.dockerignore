@@ -1,0 +1,6 @@
+# PhysioCare — Docker build exclusions (frontend)
+node_modules
+.next
+.env.local
+Dockerfile
+.git
