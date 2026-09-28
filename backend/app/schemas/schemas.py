@@ -21,6 +21,7 @@ class PatientResponse(BaseModel):
     diagnosis: str
     goals: str
     created_at: datetime
+    updated_at: datetime
 
 
 class ExerciseCreate(BaseModel):
@@ -31,6 +32,10 @@ class ExerciseCreate(BaseModel):
     clinical_goal: str = ""
     target_sets: int = 3
     target_reps: int = 12
+    safety_max_knee_valgus: float = 0.08
+    safety_min_hip_angle: float = 60.0
+    safety_max_back_arch: float = 40.0
+    safety_max_pain_score: int = 7
 
 
 class ExerciseResponse(BaseModel):
@@ -42,6 +47,10 @@ class ExerciseResponse(BaseModel):
     clinical_goal: str
     target_sets: int
     target_reps: int
+    safety_max_knee_valgus: float
+    safety_min_hip_angle: float
+    safety_max_back_arch: float
+    safety_max_pain_score: int
 
 
 class SessionCreate(BaseModel):
