@@ -1,7 +1,5 @@
 # PhysioCare — Docker Compose: runs frontend (Next.js :3000) + backend (FastAPI :8000)
 
-version: '3.9'
-
 services:
   backend:
     build: ./backend
