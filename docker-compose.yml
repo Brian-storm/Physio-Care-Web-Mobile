@@ -4,7 +4,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8001:8000"  # Host:8001 maps to Container:8000
+      - "8000:8000"  # Host:8000 maps to Container:8000
     environment:
       - DATABASE_URL=sqlite:///./physiocare.db
       - SUPABASE_URL=${SUPABASE_URL:-}
@@ -17,9 +17,9 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3001:3000"  # Host:3001 maps to Next.js default Container:3000
+      - "3000:3000"  # Host:3000 maps to Next.js default Container:3000
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8001  # Matches host backend port
+      - NEXT_PUBLIC_API_URL=http://localhost:8000  # Matches host backend port
     volumes:
       - ./frontend:/app
       - /app/node_modules

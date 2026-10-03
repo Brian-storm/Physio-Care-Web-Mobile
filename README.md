@@ -196,27 +196,42 @@ Therapists can:
 
 ### Quick Start
 
+#### Run locally
+
+From the repository root, start the frontend in one terminal:
+
 ```bash
-# 1. Frontend
 cd frontend
 npm install
 npm run dev
-# → http://localhost:3000
+```
 
-# 2. Backend (separate terminal)
+In a second terminal, also from the repository root, start the backend:
+
+```bash
 cd backend
 python -m venv venv
 .\venv\Scripts\Activate.ps1   # Windows
 # source venv/bin/activate    # macOS / Linux
 pip install -r requirements.txt
 uvicorn app.main:app --reload
-# → http://localhost:8000/docs
-
-# 3. Or both with Docker
-docker compose up
 ```
 
-Open `http://localhost:3000`, allow camera access, and start squatting. The skeleton overlay will track your form in real time.
+The frontend is at `http://localhost:3000`; the backend API docs are at
+`http://localhost:8000/docs`.
+
+#### Run with Docker
+
+From the repository root, run:
+
+```bash
+docker compose up --build
+```
+
+With Docker Compose, the frontend is at `http://localhost:3000` and the backend
+API docs are at `http://localhost:8000/docs`. Run either the local setup or Docker
+setup at a time; both use these same host ports. Open the frontend, allow camera
+access, and start squatting. The skeleton overlay will track your form in real time.
 
 ---
 

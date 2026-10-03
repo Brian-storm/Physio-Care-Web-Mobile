@@ -25,9 +25,9 @@ This builds images (first time only) and starts both services:
 
 | Service  | URL                     | Port Mapping         |
 | -------- | ----------------------- | -------------------- |
-| Frontend | http://localhost:3001   | `Host:3001 → Container:3000` |
-| Backend  | http://localhost:8001   | `Host:8001 → Container:8000` |
-| API docs | http://localhost:8001/docs | Swagger UI              |
+| Frontend | http://localhost:3000   | `Host:3000 → Container:3000` |
+| Backend  | http://localhost:8000   | `Host:8000 → Container:8000` |
+| API docs | http://localhost:8000/docs | Swagger UI              |
 
 ### Detached mode (run in background)
 
@@ -102,16 +102,16 @@ alias dc-logs='docker compose logs -f'
 
 ### Port already in use
 
-If port `3001` or `8001` is already taken on your host, change the host-side port mapping
+If port `3000` or `8000` is already taken on your host, change the host-side port mapping
 in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "3002:3000"   # frontend
-  - "8002:8000"   # backend
+  - "3001:3000"   # frontend
+  - "8001:8000"   # backend
 ```
 
-Then update `NEXT_PUBLIC_API_URL` in the frontend environment accordingly.
+Then update `NEXT_PUBLIC_API_URL` in the frontend environment to use the backend's host port.
 
 ### Changes not reflected in hot-reload
 
