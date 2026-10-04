@@ -1,0 +1,105 @@
+<!-- PhysioCare — S4 component inventory preview. Expected result: inspect approved-token samples and key component states before approval of the reusable React primitives. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · S4 Components</title>
+    <link rel="stylesheet" href="../../../../../frontend/src/styles/tokens.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--pc-color-surface-page); color: var(--pc-color-text-primary); font-family: var(--pc-font-sans); letter-spacing: 0; }
+      main { width: min(1120px, calc(100% - 48px)); margin: 32px auto 56px; }
+      header { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--pc-color-border); }
+      h1 { margin: 0; font-size: 30px; line-height: var(--pc-line-height-heading); }
+      h2 { margin: 0 0 20px; font-size: 18px; }
+      h3 { margin: 0 0 8px; font-size: 16px; }
+      p { margin: 0; color: var(--pc-color-text-secondary); font-size: 14px; line-height: var(--pc-line-height-body); }
+      .catalog { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: 40px; margin-top: 32px; }
+      section { padding-bottom: 28px; border-bottom: 1px solid var(--pc-color-border); }
+      .catalog > div > section + section { margin-top: 28px; }
+      .section-heading { margin-bottom: 20px; }
+      .samples { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+      button, input, select { font: inherit; }
+      .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 0; border-radius: var(--pc-radius-sm); background: var(--pc-primary-700); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+      .button:hover { background: var(--pc-primary-800); }
+      .button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--pc-color-focus); outline-offset: 3px; }
+      .button.secondary { background: var(--pc-primary-50); color: var(--pc-primary-800); }
+      .button.quiet { background: transparent; color: var(--pc-neutral-700); }
+      .button:disabled { background: var(--pc-neutral-200); color: var(--pc-neutral-500); cursor: not-allowed; }
+      .button.loading::before { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; content: ""; animation: spin .8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .state-caption { width: 100%; margin-top: 8px; color: var(--pc-neutral-600); font-size: 12px; }
+      .field { display: grid; gap: 8px; max-width: 360px; margin-bottom: 16px; }
+      label, legend { font-size: 14px; font-weight: 600; }
+      .field input, .field select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pc-color-border); border-radius: var(--pc-radius-sm); background: var(--pc-color-surface); color: var(--pc-color-text-primary); }
+      .field input:disabled, .field select:disabled { background: var(--pc-neutral-100); color: var(--pc-neutral-500); }
+      .help, .error { font-size: 13px; }
+      .error { color: var(--pc-danger-700); }
+      .bad-input { border-color: var(--pc-danger-600) !important; }
+      .choices { display: grid; gap: 12px; margin: 0; padding: 0; border: 0; }
+      .choice { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; }
+      .choice input { margin-top: 3px; accent-color: var(--pc-primary-700); }
+      .badge { display: inline-flex; align-items: center; padding: 6px 8px; font-size: 12px; font-weight: 700; }
+      .badge.success { background: var(--pc-success-100); color: var(--pc-success-800); }
+      .badge.warning { background: var(--pc-warning-100); color: var(--pc-warning-800); }
+      .badge.danger { background: var(--pc-danger-100); color: var(--pc-danger-800); }
+      .surface { padding: 24px; background: var(--pc-color-surface); }
+      .surface-subtle { margin-top: 16px; padding: 16px; background: var(--pc-neutral-100); }
+      .bar-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+      .bar { height: 8px; overflow: hidden; border-radius: var(--pc-radius-full); background: var(--pc-neutral-200); }
+      .bar span { display: block; width: 84%; height: 100%; border-radius: inherit; background: var(--pc-primary-600); }
+      .alert { margin-top: 20px; padding: 14px 16px; border-left: 4px solid var(--pc-warning-600); background: var(--pc-warning-50); color: var(--pc-warning-900); }
+      nav { display: grid; max-width: 300px; }
+      nav a { padding: 12px 16px; border-left: 2px solid transparent; color: var(--pc-neutral-700); text-decoration: none; }
+      nav a[aria-current="page"] { border-left-color: var(--pc-primary-700); background: var(--pc-primary-50); color: var(--pc-primary-800); }
+      table { width: 100%; border-collapse: collapse; background: var(--pc-color-surface); text-align: left; }
+      th, td { padding: 12px 16px; border-bottom: 1px solid var(--pc-color-border); font-size: 14px; }
+      th { color: var(--pc-color-text-secondary); font-size: 12px; }
+      @media (max-width: 760px) { main { width: calc(100% - 32px); margin-top: 20px; } .catalog { grid-template-columns: 1fr; gap: 28px; } header { align-items: flex-start; flex-direction: column; } }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header><div><h1>共用介面元件</h1><p>供患者訓練流程與治療師進度檢視使用。</p></div><p>S4 · Kinetic Atlas</p></header>
+      <div class="catalog">
+        <div>
+          <section>
+            <div class="section-heading"><h2>操作按鈕</h2><p>動作名稱清楚說明按下後會發生什麼。</p></div>
+            <div class="samples"><button class="button">開始訓練</button><button class="button secondary">查看進度</button><button class="button quiet">返回</button><button class="button" disabled>目前無法使用</button><button class="button loading" disabled>正在儲存</button></div>
+            <p class="state-caption">預設 · 次要 · 安靜 · 停用 · 載入中 · Tab 鍵可見 focus</p>
+          </section>
+          <section>
+            <div class="section-heading"><h2>表單欄位</h2><p>標籤、說明與錯誤訊息都和控制項關聯。</p></div>
+            <div class="field"><label for="search">搜尋患者</label><input id="search" type="text" placeholder="輸入姓名" /><span class="help">依姓名篩選患者。</span></div>
+            <div class="field"><label for="exercise">訓練動作</label><select id="exercise"><option>椅子深蹲</option></select></div>
+            <div class="field"><label for="error">電子郵件</label><input id="error" class="bad-input" aria-invalid="true" aria-describedby="error-copy" value="not-an-email" /><span id="error-copy" class="error">請輸入有效的電子郵件地址。</span></div>
+            <div class="field"><label for="disabled">患者識別碼</label><input id="disabled" value="demo-patient-01" disabled /></div>
+            <fieldset class="choices"><legend>資料使用說明</legend><label class="choice"><input type="checkbox" /><span>我已閱讀鏡頭與訓練數據說明</span></label><label class="choice"><input type="radio" name="side" checked /><span>左側</span></label><label class="choice"><input type="radio" name="side" /><span>右側</span></label></fieldset>
+          </section>
+          <section>
+            <div class="section-heading"><h2>資料列表</h2><p>表格只用在需要逐列比較的清單。</p></div>
+            <table><thead><tr><th>日期</th><th>動作</th><th>完成次數</th><th>狀態</th></tr></thead><tbody><tr><td>10 月 4 日</td><td>椅子深蹲</td><td>8 / 10</td><td><span class="badge warning">需留意</span></td></tr><tr><td>10 月 2 日</td><td>椅子深蹲</td><td>10 / 10</td><td><span class="badge success">已完成</span></td></tr></tbody></table>
+          </section>
+        </div>
+        <div>
+          <section>
+            <div class="section-heading"><h2>狀態標籤與提示</h2><p>使用文字和語意色彩共同傳達狀態。</p></div>
+            <div class="samples"><span class="badge success">已完成</span><span class="badge warning">需留意</span><span class="badge danger">請停止</span></div>
+            <div class="alert" role="status"><strong>動作測量提示</strong><p>膝部控制有 1 次需要留意。這不是診斷；是否調整訓練由治療師判斷。</p></div>
+          </section>
+          <section>
+            <div class="section-heading"><h2>測量摘要</h2><p>數值明確標示量尺與解讀邊界。</p></div>
+            <div class="surface"><h3>動作品質</h3><div class="bar-label"><span>本次平均</span><strong>84 / 100</strong></div><div class="bar" role="progressbar" aria-label="動作品質" aria-valuemin="0" aria-valuemax="100" aria-valuenow="84"><span></span></div></div>
+            <div class="surface-subtle"><strong>保留空間層次</strong><p>主要資料使用白色平面，輔助資料使用中性底色；陰影只留給需要浮起的關鍵區域。</p></div>
+          </section>
+          <section>
+            <div class="section-heading"><h2>角色導覽</h2><p>目前頁面同時顯示文字與側邊標記。</p></div>
+            <nav aria-label="患者主要導覽"><a href="#">今日概況</a><a href="#" aria-current="page">訓練計劃</a><a href="#">訓練紀錄</a></nav>
+          </section>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

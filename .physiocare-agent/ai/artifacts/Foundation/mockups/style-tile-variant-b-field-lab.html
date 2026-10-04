@@ -1,0 +1,85 @@
+<!-- PhysioCare — Revised S2 style tile B: Field Lab. Expected result: a precise, open clinical-instrument style sample that makes movement measurements and their history easy to compare. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · B — Field Lab</title>
+    <style>
+      :root { color-scheme:light; --ground:#f1f5f7; --paper:#fff; --ink:#1d3446; --muted:#627583; --blue:#3a7197; --aqua:#dcebed; --amber:#b56d2c; --rule:#ccd9df; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--ground); color:var(--ink); font-family:Aptos,"PingFang TC","Microsoft JhengHei",system-ui,sans-serif; letter-spacing:0; }
+      main { width:min(1160px,calc(100% - 64px)); margin:32px auto 48px; }
+      header { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:2px solid var(--ink); }
+      .brand { font-size:20px; font-weight:700; }
+      .role { color:var(--muted); font-size:14px; }
+      h1 { max-width:720px; margin:36px 0 12px; font-size:36px; line-height:1.25; }
+      h2 { margin:0; font-size:20px; }
+      p { margin:0; color:var(--muted); line-height:1.6; }
+      .intro { max-width:760px; font-size:16px; }
+      .facts { display:grid; grid-template-columns:repeat(3,1fr); margin:32px 0 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+      .fact { padding:20px 24px 20px 0; }
+      .fact + .fact { padding-left:24px; border-left:1px solid var(--rule); }
+      .fact span { display:block; color:var(--muted); font-size:14px; }
+      .fact strong { display:block; margin-top:8px; font-size:30px; font-variant-numeric:tabular-nums; }
+      .workspace { display:grid; grid-template-columns:minmax(0,1fr) 300px; margin-top:32px; background:var(--paper); }
+      .plot { padding:24px; background-color:var(--aqua); background-image:linear-gradient(to right,transparent 49px,#c7d7dd 50px),linear-gradient(to bottom,transparent 49px,#c7d7dd 50px); background-size:50px 50px; }
+      .plot-head { display:flex; justify-content:space-between; gap:16px; margin-bottom:20px; }
+      .plot-head span { color:var(--muted); font-size:13px; }
+      .plot svg { display:block; width:100%; height:245px; }
+      .readout { padding:24px; border-left:1px solid var(--rule); }
+      .readout dl { margin:8px 0 20px; }
+      .readout dl div { display:flex; justify-content:space-between; gap:12px; padding:16px 0; border-bottom:1px solid var(--rule); }
+      dt { color:var(--muted); font-size:14px; }
+      dd { margin:0; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+      .attention { margin:20px 0; color:#82521f; font-size:14px; line-height:1.6; }
+      button { min-height:48px; padding:12px 18px; border:2px solid var(--blue); background:var(--blue); color:white; font:inherit; font-size:16px; font-weight:700; cursor:pointer; }
+      button:hover { background:#2d5c7b; border-color:#2d5c7b; }
+      button:focus-visible { outline:3px solid #78abc7; outline-offset:3px; }
+      .sessions { display:grid; grid-template-columns:180px 1fr; gap:24px; padding:24px 0; border-bottom:1px solid var(--rule); }
+      .session-line { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+      .session-line span { display:grid; place-items:center; width:38px; height:38px; border:1px solid var(--blue); color:var(--blue); font-size:14px; }
+      .session-line span.current { background:var(--blue); color:white; }
+      .tile-footer { display:flex; gap:10px; align-items:center; margin-top:28px; color:var(--muted); font-size:13px; }
+      .swatch { width:20px; height:20px; border:1px solid rgb(29 52 70 / 10%); }
+      .swatch-ink { background:var(--ink); }
+      .swatch-blue { background:var(--blue); }
+      .swatch-aqua { background:var(--aqua); }
+      .swatch-amber { background:var(--amber); }
+      @media(max-width:760px) { main { width:calc(100% - 32px); margin-top:20px; } h1 { font-size:30px; } .facts { grid-template-columns:1fr; } .fact,.fact + .fact { padding:16px 0; border-left:0; border-bottom:1px solid var(--rule); } .workspace { grid-template-columns:1fr; } .readout { border-left:0; border-top:1px solid var(--rule); } .sessions { grid-template-columns:1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header><div class="brand">PhysioCare</div><div class="role">患者 Patient</div></header>
+      <h1>Maya，這是你最近的動作測量。</h1>
+      <p class="intro">以同一個深蹲目標追蹤每次練習，讓你和治療師看見變化。鏡頭分析在裝置端進行。</p>
+      <section class="facts" aria-label="Weekly summary">
+        <div class="fact"><span>本週完成</span><strong>3 / 4 次</strong></div>
+        <div class="fact"><span>平均動作品質</span><strong>84 / 100</strong></div>
+        <div class="fact"><span>累積深蹲</span><strong>32 次</strong></div>
+      </section>
+      <section class="workspace" aria-label="Exercise preview and measurement">
+        <div class="plot">
+          <div class="plot-head"><h2>椅子深蹲</h2><span>動作範圍示意</span></div>
+          <svg viewBox="0 0 640 260" role="img" aria-label="深蹲骨架角度與動作路徑示意">
+            <path d="M36 228H600M80 24V228" fill="none" stroke="var(--rule)" stroke-width="1" />
+            <path d="M95 200C185 186 223 170 289 153S408 104 543 54" fill="none" stroke="var(--blue)" stroke-width="3" stroke-dasharray="6 7" />
+            <circle cx="302" cy="55" r="14" fill="var(--ink)" />
+            <path d="M302 70L310 120L360 145L404 195M310 120L270 153L240 203M310 120L360 145L356 197L404 228M310 120L270 153L274 198L240 228" fill="none" stroke="var(--ink)" stroke-width="8" stroke-linecap="square" stroke-linejoin="round" />
+            <circle cx="310" cy="120" r="6" fill="var(--blue)" /><circle cx="360" cy="145" r="6" fill="var(--blue)" />
+            <text x="44" y="250" fill="var(--muted)" font-size="13" font-family="Aptos,sans-serif">站立</text><text x="515" y="250" fill="var(--muted)" font-size="13" font-family="Aptos,sans-serif">下蹲</text>
+          </svg>
+        </div>
+        <aside class="readout">
+          <h2>今日目標</h2>
+          <dl><div><dt>完成次數</dt><dd>8 / 10</dd></div><div><dt>動作品質</dt><dd>84</dd></div><div><dt>膝部控制</dt><dd>待觀察</dd></div></dl>
+          <p class="attention">這是動作測量提示，不是診斷。若感到不適，請停止並聯絡治療師。</p>
+          <button type="button">開始訓練 Start exercise</button>
+        </aside>
+      </section>
+      <section class="sessions"><div><h2>訓練紀錄</h2><p>每次結果持續累積</p></div><div class="session-line" aria-label="Four sessions from past to present"><span>週一</span><span>週三</span><span>週五</span><span class="current">今天</span></div></section>
+      <footer class="tile-footer"><span class="swatch swatch-ink"></span><span class="swatch swatch-blue"></span><span class="swatch swatch-aqua"></span><span class="swatch swatch-amber"></span><span>Mist · Navy · Calibrated blue · Amber</span></footer>
+    </main>
+  </body>
+</html>

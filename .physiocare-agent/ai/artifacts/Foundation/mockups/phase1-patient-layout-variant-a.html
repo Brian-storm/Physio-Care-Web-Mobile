@@ -1,0 +1,90 @@
+<!-- PhysioCare — S5 patient journey layout A: Kinetic Atlas. Expected result: preview entry, patient portal, setup, live analysis, and result as one linked patient flow. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · Patient flow A — Kinetic Atlas</title>
+    <link rel="stylesheet" href="../../../../../frontend/src/styles/tokens.css" />
+    <link rel="stylesheet" href="./phase1-layout-mockups.css" />
+  </head>
+  <body>
+    <main class="page patient-variant-a">
+      <header class="topbar"><div class="brand"><span class="brand-mark" aria-hidden="true"></span>PhysioCare</div><div class="topbar-meta">居家復健 · Home rehabilitation</div></header>
+      <nav class="flow-nav" aria-label="Patient journey"><a href="#entry">入口</a><a href="#patient-home">今日概況</a><a href="#setup">準備訓練</a><a href="#live">動作分析</a><a href="#result">結果</a></nav>
+
+      <section id="entry" class="route-screen">
+        <h1>讓動作更穩，從每一次練習開始。</h1>
+        <p class="screen-intro">PhysioCare 在家中即時測量動作，讓你和治療師都能看見訓練進度。影片只在你的裝置上處理。</p>
+        <div class="movement-field" aria-label="Home rehabilitation movement path">
+          <div><h2>動作，成為復健進度的證據。</h2><p>從姿勢路徑與訓練紀錄，看見每次練習的變化。</p></div>
+          <svg viewBox="0 0 720 220" role="img" aria-label="人體深蹲姿勢和移動路徑示意">
+            <path class="movement-path" d="M68 182C165 172 198 151 284 143S431 102 640 42" />
+            <circle cx="330" cy="39" r="15" class="pose-point" />
+            <path class="pose-lines" d="M330 56L336 108L384 132L430 180M336 108L290 142L260 188M336 108L384 132L380 170L430 200M336 108L290 142L294 174L260 200" />
+            <circle cx="336" cy="108" r="7" class="pose-point" /><circle cx="384" cy="132" r="7" class="pose-point" />
+          </svg>
+          <a class="action" href="#patient-home">查看我的訓練</a>
+        </div>
+        <div class="entry-options">
+          <div class="entry-option"><div><h2>我是患者</h2><p>查看今日訓練，開始動作分析。</p></div><a class="action" href="#patient-home">進入患者入口</a></div>
+          <div class="entry-option"><div><h2>我是物理治療師</h2><p>查看患者訓練與進度摘要。</p></div><a class="action secondary" href="./phase1-therapist-layout-variant-a.html#entry">前往治療師工作區</a></div>
+        </div>
+      </section>
+
+      <section id="patient-home" class="route-screen">
+        <h1>Maya，今天一起練習椅子深蹲。</h1>
+        <p class="screen-intro">你的目標是穩定膝部控制，逐步建立下肢力量。</p>
+        <div class="patient-home-grid">
+          <div class="movement-field">
+            <div><h2>你正在建立穩定的動作路徑</h2><p>最近 4 次練習的動作品質逐步提升。</p></div>
+            <svg viewBox="0 0 640 220" role="img" aria-label="近期深蹲動作路徑趨勢示意">
+              <path class="movement-path" d="M38 178C125 170 180 150 245 149S378 113 456 94S550 60 605 42" />
+              <circle cx="322" cy="40" r="15" class="pose-point" />
+              <path class="pose-lines" d="M322 57L328 105L374 130L420 178M328 105L282 139L252 187M328 105L374 130L372 169L420 198M328 105L282 139L286 174L252 198" />
+            </svg>
+          </div>
+          <aside class="measure-rail">
+            <h2>本週復健概況</h2>
+            <div class="measure-row"><span>完成訓練</span><strong>3 / 4 次</strong></div>
+            <div class="measure-row"><span>動作品質</span><strong>84 / 100</strong></div>
+            <div class="measure-row"><span>今日目標</span><strong>3 組 × 10 次</strong></div>
+            <p class="goal-note">治療師設定：穩定膝部控制。</p>
+            <a class="action" href="#setup">開始椅子深蹲</a>
+          </aside>
+        </div>
+        <div class="session-track" aria-label="四次歷史訓練，今天是第四次"><span class="session-dot">1</span><span class="session-connector"></span><span class="session-dot">2</span><span class="session-connector"></span><span class="session-dot">3</span><span class="session-connector"></span><span class="session-dot current">4</span></div>
+      </section>
+
+      <section id="setup" class="route-screen">
+        <h1>先確認鏡頭和空間準備好了。</h1>
+        <p class="screen-intro">找一個能看見全身的位置，確認椅子穩固，再開始動作。</p>
+        <div class="setup-grid">
+          <div class="camera-ready"><div><div class="camera-symbol" aria-hidden="true">＋</div><p>鏡頭已就緒 · Camera ready</p></div></div>
+          <div><h2>椅子深蹲</h2><p>3 組 × 10 次 · 目標：穩定膝部控制</p><ul class="setup-list"><li><span class="check">✓</span><span>鏡頭權限已開啟</span></li><li><span class="check">✓</span><span>人物全身在畫面內</span></li><li><span class="check">✓</span><span>姿勢分析在裝置端進行</span></li></ul><div class="privacy-note">影片不會離開此裝置。訓練後會顯示並保存次數、動作品質與風險測量。</div><a class="action" href="#live">開始動作分析</a></div>
+        </div>
+      </section>
+
+      <section id="live" class="route-screen" data-workspace="live">
+        <h1>跟著自己的節奏完成動作。</h1>
+        <p class="screen-intro">即時姿勢疊圖協助你掌握動作；安全提示是測量訊號，不是診斷。</p>
+        <div class="live-grid">
+          <div class="live-camera">
+            <svg viewBox="0 0 460 300" role="img" aria-label="即時深蹲人體骨架疊圖示意"><path class="movement-path" d="M82 250C142 225 186 180 234 138S314 85 388 50"/><circle cx="236" cy="39" r="17" class="pose-point"/><path class="pose-lines" d="M236 57L232 122L286 150L320 220M232 122L180 156L148 225M232 122L286 150L280 212L320 252M232 122L180 156L186 214L148 252"/><circle cx="232" cy="122" r="6" class="pose-point"/><circle cx="286" cy="150" r="6" class="pose-point"/></svg>
+            <p>即時姿勢骨架 · Pose overlay</p>
+          </div>
+          <aside class="live-rail"><h2>椅子深蹲</h2><div class="live-reps">08 <span>/ 10 次</span></div><div class="measure-row"><span>膝部角度</span><strong>92°</strong></div><div class="measure-row"><span>動作品質</span><strong>84</strong></div><div class="live-alert">膝部路徑有 1 次需要留意。感到不適時請停止。</div><div class="live-actions"><a class="action" href="#result">結束並查看結果</a><a class="action secondary" href="#patient-home">暫停</a></div></aside>
+        </div>
+      </section>
+
+      <section id="result" class="route-screen">
+        <h1>今天完成了 8 次椅子深蹲。</h1>
+        <p class="screen-intro">這些測量可以和過往練習比較，並提供治療師檢視參考。</p>
+        <div class="result-grid">
+          <div class="result-highlight"><h2>動作品質</h2><div class="result-score">84 <span class="muted">/ 100</span></div><p>與前次 79 分相比有所提升。分數只反映本次動作測量。</p><div class="pain-check"><label for="pain">今天訓練時有不舒服嗎？</label><input id="pain" type="range" min="0" max="10" value="2" /><p>0 沒有不適　　10 非常不舒服</p></div></div>
+          <div><h2>本次訓練摘要</h2><div class="measure-row"><span>完成組數</span><strong>3 組</strong></div><div class="measure-row"><span>完成次數</span><strong>8 / 10</strong></div><div class="measure-row"><span>風險提示</span><strong>1 次需留意</strong></div><div class="privacy-note">如果疼痛或不適增加，請停止訓練並聯絡你的治療師。</div><a class="action" href="#patient-home">返回今日概況</a></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

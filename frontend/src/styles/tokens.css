@@ -1,0 +1,155 @@
+/* PhysioCare — Kinetic Atlas design tokens. Expected result: one reusable light clinical palette, type scale, spacing/radius/depth/motion system, and focused live-session semantic surfaces. */
+
+:root {
+  color-scheme: light;
+
+  --pc-neutral-50: #f7f9f6;
+  --pc-neutral-100: #edf2ee;
+  --pc-neutral-200: #dce5df;
+  --pc-neutral-300: #c5d2c9;
+  --pc-neutral-400: #91a499;
+  --pc-neutral-500: #6b8175;
+  --pc-neutral-600: #53695d;
+  --pc-neutral-700: #3b5147;
+  --pc-neutral-800: #263d33;
+  --pc-neutral-900: #183e35;
+
+  --pc-primary-50: #f1f8f3;
+  --pc-primary-100: #e2efe6;
+  --pc-primary-200: #c5e0cf;
+  --pc-primary-300: #9ac9ae;
+  --pc-primary-400: #6aa989;
+  --pc-primary-500: #3a8b66;
+  --pc-primary-600: #327451;
+  --pc-primary-700: #285c43;
+  --pc-primary-800: #214936;
+  --pc-primary-900: #183e35;
+
+  --pc-success-50: #eff8f1;
+  --pc-success-100: #ddf0e1;
+  --pc-success-200: #bde2c6;
+  --pc-success-300: #91cfa2;
+  --pc-success-400: #63b77c;
+  --pc-success-500: #41995d;
+  --pc-success-600: #327a4a;
+  --pc-success-700: #29613d;
+  --pc-success-800: #234d33;
+  --pc-success-900: #1d3f2b;
+
+  --pc-warning-50: #fcf6ea;
+  --pc-warning-100: #f6eacb;
+  --pc-warning-200: #eed59c;
+  --pc-warning-300: #e3bc6c;
+  --pc-warning-400: #d29d45;
+  --pc-warning-500: #b97f32;
+  --pc-warning-600: #9a6429;
+  --pc-warning-700: #7c4f25;
+  --pc-warning-800: #664124;
+  --pc-warning-900: #553721;
+
+  --pc-danger-50: #fcf1f0;
+  --pc-danger-100: #f8dedc;
+  --pc-danger-200: #f0bcb8;
+  --pc-danger-300: #e4938d;
+  --pc-danger-400: #d36c67;
+  --pc-danger-500: #bc4f4b;
+  --pc-danger-600: #9d3e3d;
+  --pc-danger-700: #7e3435;
+  --pc-danger-800: #682d2e;
+  --pc-danger-900: #562729;
+
+  --pc-info-50: #eff6f8;
+  --pc-info-100: #dcecf0;
+  --pc-info-200: #b9d9e1;
+  --pc-info-300: #8bbfcf;
+  --pc-info-400: #5fa1b7;
+  --pc-info-500: #43859d;
+  --pc-info-600: #356b81;
+  --pc-info-700: #2d5668;
+  --pc-info-800: #284755;
+  --pc-info-900: #243c49;
+
+  --pc-color-text-primary: var(--pc-neutral-900);
+  --pc-color-text-secondary: var(--pc-neutral-600);
+  --pc-color-surface-page: var(--pc-neutral-50);
+  --pc-color-surface: #ffffff;
+  --pc-color-border: var(--pc-neutral-200);
+  --pc-color-focus: var(--pc-info-500);
+
+  --pc-font-sans: Aptos, "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --pc-font-size-11: 11px;
+  --pc-font-size-12: 12px;
+  --pc-font-size-13: 13px;
+  --pc-font-size-14: 14px;
+  --pc-font-size-16: 16px;
+  --pc-font-size-18: 18px;
+  --pc-font-size-20: 20px;
+  --pc-font-size-24: 24px;
+  --pc-font-size-30: 30px;
+  --pc-font-size-36: 36px;
+  --pc-font-size-48: 48px;
+  --pc-font-weight-body: 400;
+  --pc-font-weight-emphasis: 500;
+  --pc-font-weight-subheading: 600;
+  --pc-font-weight-heading: 700;
+  --pc-line-height-heading: 1.25;
+  --pc-line-height-body: 1.6;
+
+  --pc-space-1: 4px;
+  --pc-space-2: 8px;
+  --pc-space-3: 12px;
+  --pc-space-4: 16px;
+  --pc-space-5: 20px;
+  --pc-space-6: 24px;
+  --pc-space-8: 32px;
+  --pc-space-10: 40px;
+  --pc-space-12: 48px;
+  --pc-space-16: 64px;
+  --pc-space-page: 40px;
+  --pc-space-page-mobile: 24px;
+
+  --pc-radius-xs: 4px;
+  --pc-radius-sm: 8px;
+  --pc-radius-md: 12px;
+  --pc-radius-lg: 16px;
+  --pc-radius-xl: 24px;
+  --pc-radius-full: 9999px;
+  --pc-shadow-panel: 0 18px 40px rgb(24 62 53 / 9%);
+
+  --pc-z-base: 0;
+  --pc-z-sticky: 10;
+  --pc-z-overlay: 20;
+  --pc-z-modal: 30;
+  --pc-z-toast: 40;
+  --pc-motion-quick: 120ms;
+  --pc-motion-standard: 200ms;
+  --pc-motion-emphasis: 320ms;
+  --pc-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+[data-workspace="live"] {
+  color-scheme: dark;
+  --pc-color-text-primary: #f3f5ee;
+  --pc-color-text-secondary: #b3c2b9;
+  --pc-color-surface-page: #183432;
+  --pc-color-surface: #263f3d;
+  --pc-color-border: #49605b;
+  --pc-color-focus: #d4a85f;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --pc-space-page: var(--pc-space-page-mobile);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

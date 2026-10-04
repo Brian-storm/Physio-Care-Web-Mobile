@@ -1,0 +1,45 @@
+<!-- PhysioCare — S5 therapist workspace layout A: Review-first. Expected result: preview patient check, patient overview, and progress review with follow-up signals in one clinician workflow. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · Therapist workspace A — Review first</title>
+    <link rel="stylesheet" href="../../../../../frontend/src/styles/tokens.css" />
+    <link rel="stylesheet" href="./phase1-layout-mockups.css" />
+  </head>
+  <body>
+    <main class="page therapist-variant-a">
+      <header class="topbar"><div class="brand"><span class="brand-mark" aria-hidden="true"></span>PhysioCare</div><div class="topbar-meta">治療師 Physiotherapist · 示範工作區</div></header>
+      <nav class="flow-nav" aria-label="Therapist journey"><a href="#entry">入口</a><a href="#therapist-list">患者名單</a><a href="#patient-detail">患者概覽</a><a href="#progress">進度報告</a></nav>
+
+      <section id="entry" class="route-screen">
+        <h1>看見診間之外的復健進度。</h1>
+        <p class="screen-intro">PhysioCare 把患者居家訓練中的動作測量與自我回報帶回治療師檢視，協助你判斷哪些變化值得跟進。</p>
+        <div class="movement-field"><div><h2>從測量到人工檢視</h2><p>患者在家完成動作，系統整理訓練數據，你保留臨床判斷。</p></div><svg viewBox="0 0 720 220" role="img" aria-label="訓練測量和進度趨勢示意"><path class="movement-path" d="M70 182C164 172 201 154 282 143S432 102 641 42"/><circle cx="333" cy="39" r="15" class="pose-point"/><path class="pose-lines" d="M333 56L339 108L387 132L430 180M339 108L292 142L262 188M339 108L387 132L382 170L430 200M339 108L292 142L296 174L262 200"/></svg><a class="action" href="#therapist-list">查看患者名單</a></div>
+        <div class="entry-options"><div class="entry-option"><h2>治療師工作區</h2><p>先查看需要跟進的訓練，再深入患者進度。</p><a class="action" href="#therapist-list">進入工作區</a></div><div class="entry-option"><h2>患者工作區</h2><p>回到患者今日訓練與動作分析流程。</p><a class="action secondary" href="./phase1-patient-layout-variant-a.html#patient-home">查看患者流程</a></div></div>
+      </section>
+
+      <section id="therapist-list" class="route-screen">
+        <h1>患者概況</h1>
+        <p class="screen-intro">先從最近活動與需要留意的測量開始。示範資料為虛構患者紀錄。</p>
+        <div class="patient-list">
+          <aside class="patient-queue" aria-label="Patient list"><a class="patient-link" href="#patient-detail" aria-current="page"><strong>Maya Chen</strong><br /><span class="muted">最近訓練 · 今天</span></a><a class="patient-link" href="#patient-detail"><strong>Jordan Lee</strong><br /><span class="muted">最近訓練 · 昨天</span></a><a class="patient-link" href="#patient-detail"><strong>Alex Wong</strong><br /><span class="muted">最近訓練 · 2 天前</span></a></aside>
+          <div><h2>Maya Chen</h2><p>目標：穩定膝部控制，逐步建立下肢力量。</p><div class="patient-detail patient-detail-offset"><div><div class="measure-row"><span>本週訓練</span><strong>3 次</strong></div><div class="measure-row"><span>平均動作品質</span><strong>84 / 100</strong></div><div class="measure-row"><span>已標記事件</span><strong>1 次</strong></div><p class="goal-note">最近一次訓練有膝部控制提示，可開啟進度報告檢視多次結果。</p><a class="action" href="#progress">開啟進度報告</a></div><div class="surface-subtle"><h3>最近訓練</h3><p>椅子深蹲 · 8 / 10 次</p><p>平均動作品質 84 · 最高風險 24</p></div></div></div>
+        </div>
+      </section>
+
+      <section id="patient-detail" class="route-screen">
+        <h1>Maya Chen</h1>
+        <p class="screen-intro">患者目標：穩定膝部控制，逐步建立下肢力量。</p>
+        <div class="patient-detail"><div><h2>最近訓練</h2><div class="measure-row"><span>椅子深蹲</span><strong>今天</strong></div><div class="measure-row"><span>完成次數</span><strong>8 / 10</strong></div><div class="measure-row"><span>平均動作品質</span><strong>84 / 100</strong></div><div class="measure-row"><span>疼痛自評</span><strong>2 / 10</strong></div><div class="privacy-note">這些是測量與自我回報，需由你判斷其臨床意義。</div><a class="action" href="#progress">檢視完整進度</a></div><aside><h2>需要人工檢視</h2><ul class="attention-list"><li><span class="status">需留意</span><p>今日有 1 次膝部控制訊號。</p></li><li><span class="muted">近期趨勢</span><p>動作品質較上週提升。</p></li></ul></aside></div>
+      </section>
+
+      <section id="progress" class="route-screen">
+        <h1>Maya 的復健進度</h1>
+        <p class="screen-intro">依照椅子深蹲訓練紀錄查看動作品質與患者回報；系統提供測量趨勢，不自動調整治療計劃。</p>
+        <div class="patient-detail"><div><h2>動作品質趨勢</h2><svg class="report-chart" viewBox="0 0 600 190" role="img" aria-label="動作品質四次訓練趨勢上升"><path class="baseline" d="M20 160H580"/><path d="M28 142C112 135 145 118 214 120S332 93 398 96S492 67 568 42"/></svg><div class="measure-row"><span>總訓練次數</span><strong>12</strong></div><div class="measure-row"><span>完成動作次數</span><strong>96</strong></div><div class="measure-row"><span>已標記訓練</span><strong>1</strong></div></div><aside><h2>訓練紀錄</h2><ul class="attention-list"><li><strong>今天 · 椅子深蹲</strong><p>8 / 10 次 · 品質 84 · 疼痛 2 / 10</p><span class="status">需留意 1 次</span></li><li><strong>10 月 2 日 · 椅子深蹲</strong><p>10 / 10 次 · 品質 79 · 疼痛 1 / 10</p></li><li><strong>9 月 30 日 · 椅子深蹲</strong><p>10 / 10 次 · 品質 75 · 疼痛 2 / 10</p></li></ul><div class="privacy-note">趨勢供專業檢視參考，並非自動診斷或處方。</div></aside></div>
+      </section>
+    </main>
+  </body>
+</html>

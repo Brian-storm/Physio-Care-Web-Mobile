@@ -1,0 +1,92 @@
+<!-- PhysioCare — Revised S2 style tile A: Kinetic Atlas. Expected result: a distinctive patient-facing visual direction centered on measured movement and readable recovery evidence. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · A — Kinetic Atlas</title>
+    <style>
+      :root { color-scheme: light; --paper:#f7f9f6; --white:#fff; --ink:#183e35; --muted:#65776e; --green:#3a8b66; --green-pale:#e5f0e9; --amber:#a96b25; --rule:#cad8d0; --depth:0 18px 40px rgb(24 62 53 / 9%); }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--paper); color:var(--ink); font-family:Aptos,"PingFang TC","Microsoft JhengHei",system-ui,sans-serif; letter-spacing:0; }
+      main { width:min(1160px,calc(100% - 64px)); margin:32px auto 48px; }
+      header { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--rule); }
+      .brand { display:flex; align-items:center; gap:12px; font-size:20px; font-weight:700; }
+      .mark { display:grid; place-items:center; width:36px; height:36px; background:var(--ink); color:var(--white); border-radius:10px; font-size:18px; }
+      .role { color:var(--muted); font-size:14px; }
+      .intro { display:flex; justify-content:space-between; align-items:end; gap:32px; padding:40px 0 28px; }
+      .intro p { max-width:590px; margin:0; color:var(--muted); font-size:16px; line-height:1.6; }
+      h1 { max-width:540px; margin:0 0 12px; font-size:36px; line-height:1.25; font-weight:700; }
+      h2 { margin:0; font-size:20px; line-height:1.3; }
+      .goal { border-left:4px solid var(--green); padding:4px 0 4px 16px; color:var(--ink); font-size:14px; line-height:1.6; }
+      .workspace { display:grid; grid-template-columns:minmax(0,1fr) 300px; background:var(--white); box-shadow:var(--depth); }
+      .movement { min-height:360px; padding:24px; background:var(--green-pale); }
+      .section-title { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:18px; }
+      .section-title span { color:var(--muted); font-size:13px; }
+      .pose { display:block; width:100%; height:250px; }
+      .measurements { padding:28px 24px; }
+      .value { display:flex; justify-content:space-between; align-items:baseline; padding:18px 0; border-bottom:1px solid var(--rule); }
+      .value:last-of-type { border-bottom:0; }
+      .value span { color:var(--muted); font-size:14px; }
+      .value strong { font-size:24px; font-variant-numeric:tabular-nums; }
+      .notice { margin:24px 0; padding-left:12px; border-left:3px solid var(--amber); color:#76501f; font-size:14px; line-height:1.5; }
+      button { width:100%; min-height:48px; padding:12px 16px; border:0; border-radius:8px; background:var(--ink); color:var(--white); font:inherit; font-size:16px; font-weight:700; cursor:pointer; }
+      button:hover { background:#24584a; }
+      button:focus-visible { outline:3px solid var(--green); outline-offset:3px; }
+      .history { display:flex; align-items:center; gap:0; margin-top:24px; padding:20px 24px; background:var(--white); }
+      .history-title { min-width:160px; }
+      .history-title p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+      .track { display:flex; align-items:center; flex:1; }
+      .point { position:relative; display:grid; place-items:center; width:28px; height:28px; border:2px solid var(--green); border-radius:50%; background:var(--white); color:var(--green); font-size:12px; font-weight:700; }
+      .point.current { background:var(--green); color:var(--white); }
+      .connector { flex:1; height:2px; background:var(--rule); }
+      .tile-footer { display:flex; align-items:center; gap:12px; margin-top:32px; color:var(--muted); font-size:13px; }
+      .swatch { width:20px; height:20px; border-radius:6px; }
+      .swatch-ink { background:var(--ink); }
+      .swatch-green { background:var(--green); }
+      .swatch-pale { background:var(--green-pale); }
+      .swatch-amber { background:var(--amber); }
+      @media(max-width:760px) { main { width:calc(100% - 32px); margin-top:20px; } .intro { align-items:flex-start; flex-direction:column; gap:16px; padding-top:28px; } h1 { font-size:30px; } .workspace { grid-template-columns:1fr; } .measurements { padding:24px; } .history { align-items:flex-start; flex-direction:column; gap:16px; } .track { width:100%; } .movement { min-height:300px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand"><span class="mark" aria-hidden="true">↗</span><span>PhysioCare</span></div>
+        <div class="role">患者 Patient</div>
+      </header>
+      <section class="intro">
+        <div><h1>讓動作更穩，<br />從每一次練習開始。</h1><p>椅子深蹲是 Maya 今天的居家訓練。鏡頭只用來即時測量，影片不會離開這台裝置。</p></div>
+        <div class="goal"><strong>目前目標</strong><br />穩定膝部控制，逐步建立下肢力量。</div>
+      </section>
+      <section class="workspace" aria-label="Movement measurement sample">
+        <div class="movement">
+          <div class="section-title"><h2>動作路徑 Movement path</h2><span>即時姿勢測量</span></div>
+          <svg class="pose" viewBox="0 0 640 260" role="img" aria-label="深蹲姿勢骨架與動作路徑示意">
+            <path d="M86 221H575" fill="none" stroke="var(--rule)" stroke-width="2" />
+            <path d="M308 42C340 68 359 95 360 127C361 159 343 183 320 202" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="7 8" />
+            <circle cx="306" cy="37" r="15" fill="var(--ink)" />
+            <path d="M306 54L315 111L362 139L400 187M315 111L270 145L242 197M315 111L362 139L358 190L400 221M315 111L270 145L276 194L244 221" fill="none" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="315" cy="111" r="7" fill="var(--green)" /><circle cx="362" cy="139" r="7" fill="var(--green)" /><circle cx="270" cy="145" r="7" fill="var(--green)" />
+            <path d="M365 145L422 128" fill="none" stroke="var(--amber)" stroke-width="2" />
+            <text x="430" y="132" fill="var(--amber)" font-size="14" font-family="Aptos, sans-serif">膝部控制</text>
+            <text x="32" y="248" fill="var(--muted)" font-size="13" font-family="Aptos, sans-serif">站立</text>
+            <text x="515" y="248" fill="var(--muted)" font-size="13" font-family="Aptos, sans-serif">下蹲範圍</text>
+          </svg>
+        </div>
+        <aside class="measurements">
+          <h2>本次訓練 Session</h2>
+          <div class="value"><span>完成次數</span><strong>8 / 10</strong></div>
+          <div class="value"><span>動作品質</span><strong>84 / 100</strong></div>
+          <div class="notice">膝部控制有 1 次需要留意。這是測量提示，是否調整訓練由治療師判斷。</div>
+          <button type="button">開始訓練 Start exercise</button>
+        </aside>
+      </section>
+      <section class="history" aria-label="Recent sessions">
+        <div class="history-title"><h2>練習累積</h2><p>最近 4 次訓練</p></div>
+        <div class="track" aria-label="由過去至今的復健訓練序列"><span class="point">1</span><span class="connector"></span><span class="point">2</span><span class="connector"></span><span class="point">3</span><span class="connector"></span><span class="point current">4</span></div>
+      </section>
+      <footer class="tile-footer"><span class="swatch swatch-ink"></span><span class="swatch swatch-green"></span><span class="swatch swatch-pale"></span><span class="swatch swatch-amber"></span><span>Chalk · Evergreen · Motion · Safety ochre</span></footer>
+    </main>
+  </body>
+</html>

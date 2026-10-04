@@ -1,22 +1,20 @@
-/* PhysioCare — Global styles: Tailwind directives, light/dark theme variables */
+/* PhysioCare — Global styles and token import. Expected result: portal routes use light Kinetic Atlas surfaces while live workspaces can opt into dark semantic surfaces. */
+
+@import '../styles/tokens.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground: #0f172a;
-  --background: #f8fafc;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground: #f8fafc;
-    --background: #0f172a;
-  }
+  --foreground: var(--pc-color-text-primary);
+  --background: var(--pc-color-surface-page);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  font-family: var(--pc-font-sans);
+  letter-spacing: 0;
+  line-height: var(--pc-line-height-body);
 }
