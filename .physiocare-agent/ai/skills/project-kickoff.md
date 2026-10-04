@@ -41,7 +41,7 @@
 
 所有階段的定案都寫進持久化的 `ai/context/design-system.md`（見該範本）。這份文件是後續所有功能 Epic 做 UI 時的單一事實來源。
 
-**S2–S5 全程套用 `ai/skills/design-craft.md` 的設計工藝紀律**（type scale、4 的倍數間距、色彩系統分階、depth 三選一、實作前先比對高品質開源參考），確保產出的不只是「有走完流程」，而是達到與高品質 production 產品同級的視覺水準。
+**S2–S5 全程使用 OpenCode `frontend-design` skill，並套用 `ai/skills/frontend-design.md` 的 PhysioCare 設計準則**（type scale、4 的倍數間距、色彩系統分階、depth 三選一、實作前先比對高品質開源參考），確保產出的不只是「有走完流程」，而是達到與高品質 production 產品同級的視覺水準。
 
 - **S1 — 底層框架與元件庫策略**。依步驟 1 的技術棧，決定 UI 框架、元件庫是「採用現成（如 shadcn/ui、MUI、Ant Design）」還是「自建」、以及樣式方案（如 Tailwind、CSS-in-JS、CSS Modules）。作法同步驟 6 的「探索現成套件」：列 2-3 個合理選項、附優劣與自己的建議。**人工關卡：選定框架與元件庫策略**，寫進 `design-system.md` 的「底層框架」。
 - **S2 — 視覺風格方向**。針對選定框架，產出 2-3 個 **style tile**（風格方向，不是完整版面）：每個變體呈現色彩情緒、字體個性、圓角與陰影傾向、密度、亮／暗模式與 1-2 個參考產品，讓人工比較「整體氣質」。這是 `ui-mockup-gate` 的風格方向變體。**人工關卡：選定一個風格方向**，寫進 `design-system.md` 的「風格方向」。

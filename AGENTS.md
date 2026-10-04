@@ -88,3 +88,7 @@ cd backend && python -c "from app.main import app; print('OK')"
 2. **Clinical safety**: AI measures and flags — never diagnoses or prescribes. Human-in-the-loop.
 3. **Zero cloud cost**: MediaPipe in browser means no server GPU bills.
 4. **Minimal dependencies**: Only add a dependency if it solves a clear, necessary problem.
+
+## UI Design Skill
+
+Use the OpenCode `frontend-design` skill at `.agents/skills/frontend-design/SKILL.md` for UI mockups, implementation, and visual review. Apply PhysioCare-specific rules from `.physiocare-agent/ai/skills/frontend-design.md` and reuse the existing tokens and components in `.physiocare-agent/ai/context/design-system.md`.

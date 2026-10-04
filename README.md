@@ -297,7 +297,7 @@ This project uses the **Engine** framework under `.physiocare-agent/` to coordin
 | **project-search** | Build task-specific context packs via minimal codebase search |
 | **spec-interrogation** | Convert vague requirements into structured specs with edge cases |
 | **ui-mockup-gate** | Produce multiple mockup variants for human selection before UI work |
-| **design-craft** | Enforce visual design discipline (type scale, spacing, color tokens) |
+| **frontend-design** | Guide visual design and critique, grounded in PhysioCare's design tokens and UI standards |
 | **implementation-plan** | Translate approved specs into scoped, AI-ready task cards |
 | **relationship-docs** | Document system relationships using Mermaid diagrams and tables |
 | **security-maintainability-review** | Review for correctness, privacy, auth, and architectural drift |

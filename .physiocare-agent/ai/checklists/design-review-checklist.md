@@ -1,6 +1,6 @@
 # 設計審查檢查清單
 
-UI 變更交付前、mockup 關卡審查時，或使用者抱怨「醜」時逐項打勾。**不要憑感覺**，每一項都對著實際畫面與程式碼確認。原則出處見 `ai/skills/design-craft.md`。
+UI 變更交付前、mockup 關卡審查時，或使用者抱怨「醜」時逐項打勾。**不要憑感覺**，每一項都對著實際畫面與程式碼確認。設計原則見 `ai/skills/frontend-design.md`，通用設計流程見 `.agents/skills/frontend-design/SKILL.md`。
 
 ## 一、字體與文字
 
@@ -66,7 +66,7 @@ UI 變更交付前、mockup 關卡審查時，或使用者抱怨「醜」時逐�
 ## 十、最終檢查
 
 - [ ] 瞇起眼看，視覺重心對嗎？
-- [ ] 跟 `ai/skills/design-craft.md` 參考清單裡最像的 production 產品並排比，差在哪？
+- [ ] 跟 `ai/skills/frontend-design.md` 參考清單裡最像的 production 產品並排比，差在哪？
 - [ ] 給人看 5 秒，能說出「這頁是做什麼的」嗎？
 
 還是不對勁時：找最像的參考專案並排截圖比對；**最後手段**是放棄目前排版、照參考從零重排一次——常常比東補西補快。
