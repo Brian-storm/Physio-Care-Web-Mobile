@@ -1,0 +1,109 @@
+/* PhysioCare — S5 shared layout mockup styles. Expected result: consistent Kinetic Atlas previews with distinct patient and therapist information architectures. */
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--pc-color-surface-page); color: var(--pc-color-text-primary); font-family: var(--pc-font-sans); letter-spacing: 0; }
+button, input, select { font: inherit; }
+a { color: inherit; }
+.page { width: min(1180px, calc(100% - 64px)); margin: 0 auto 64px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--pc-color-border); }
+.brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; }
+.brand-mark { width: 12px; height: 12px; border-radius: 50%; background: var(--pc-primary-600); }
+.topbar-meta, .muted { color: var(--pc-color-text-secondary); font-size: 14px; }
+.flow-nav { position: sticky; z-index: 10; top: 0; display: flex; flex-wrap: wrap; gap: 4px; padding: 12px 0; background: var(--pc-color-surface-page); border-bottom: 1px solid var(--pc-color-border); }
+.flow-nav a { padding: 8px 12px; color: var(--pc-neutral-700); font-size: 14px; text-decoration: none; }
+.flow-nav a:hover, .flow-nav a:focus-visible { color: var(--pc-primary-800); outline: 2px solid var(--pc-color-focus); outline-offset: 2px; }
+.route-screen { padding: 48px 0; border-bottom: 1px solid var(--pc-color-border); scroll-margin-top: 76px; }
+.route-screen h1 { max-width: 760px; margin: 0 0 12px; font-size: 36px; line-height: var(--pc-line-height-heading); }
+.route-screen h2 { margin: 0 0 8px; font-size: 20px; line-height: var(--pc-line-height-heading); }
+.route-screen h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.4; }
+.route-screen p { margin: 0; color: var(--pc-color-text-secondary); font-size: 16px; line-height: var(--pc-line-height-body); }
+.screen-intro { max-width: 740px; margin-bottom: 28px !important; }
+.entry-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; margin-top: 32px; }
+.entry-option { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; padding: 28px; background: var(--pc-color-surface); }
+.patient-home-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 32px; align-items: stretch; }
+.movement-field { display: grid; align-content: space-between; min-height: 320px; padding: 24px; background: var(--pc-primary-50); box-shadow: var(--pc-shadow-panel); }
+.movement-field svg { display: block; width: 100%; height: 220px; }
+.movement-path { fill: none; stroke: var(--pc-primary-600); stroke-width: 3; stroke-dasharray: 7 8; }
+.pose-lines { fill: none; stroke: var(--pc-neutral-900); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.pose-point { fill: var(--pc-primary-600); }
+.measure-rail { display: flex; flex-direction: column; padding: 24px; background: var(--pc-color-surface); }
+.measure-row { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--pc-color-border); }
+.measure-row span { color: var(--pc-color-text-secondary); font-size: 14px; }
+.measure-row strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.goal-note { margin: 20px 0; padding-left: 12px; border-left: 3px solid var(--pc-warning-600); color: var(--pc-warning-800); font-size: 14px; line-height: 1.6; }
+.action { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 18px; border: 0; border-radius: var(--pc-radius-sm); background: var(--pc-primary-700); color: var(--pc-neutral-50); font-size: 16px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.action:hover { background: var(--pc-primary-800); }
+.action:focus-visible { outline: 3px solid var(--pc-color-focus); outline-offset: 3px; }
+.action.secondary { background: var(--pc-primary-50); color: var(--pc-primary-800); }
+.action.secondary:hover { background: var(--pc-primary-100); }
+.session-track { display: flex; align-items: center; gap: 0; margin-top: 24px; }
+.session-dot { display: grid; place-items: center; width: 32px; height: 32px; border: 2px solid var(--pc-primary-600); border-radius: 50%; background: var(--pc-color-surface); color: var(--pc-primary-800); font-size: 13px; font-weight: 700; }
+.session-dot.current { background: var(--pc-primary-700); color: var(--pc-neutral-50); }
+.session-connector { flex: 1; height: 2px; background: var(--pc-color-border); }
+.privacy-note { margin-top: 20px; padding: 16px 0; border-top: 1px solid var(--pc-color-border); color: var(--pc-color-text-secondary); font-size: 14px; line-height: 1.6; }
+.setup-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .8fr); gap: 40px; align-items: start; }
+.camera-ready { display: grid; place-items: center; min-height: 270px; padding: 24px; background: var(--pc-neutral-100); }
+.camera-ready p { margin-top: 16px; }
+.camera-symbol { display: grid; place-items: center; width: 92px; height: 92px; border: 2px solid var(--pc-primary-600); border-radius: 50%; color: var(--pc-primary-800); font-size: 36px; }
+.setup-list { display: grid; gap: 16px; margin: 24px 0; padding: 0; list-style: none; }
+.setup-list li { display: flex; gap: 12px; align-items: baseline; font-size: 14px; }
+.check { color: var(--pc-success-700); font-weight: 700; }
+.live-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: 400px; background: var(--pc-color-surface); color: var(--pc-color-text-primary); }
+.live-camera { display: grid; place-items: center; min-height: 400px; padding: 24px; background: var(--pc-color-surface-page); }
+.live-camera svg { width: min(460px, 88%); height: 300px; }
+.live-camera .pose-lines { stroke: var(--pc-primary-300); }
+.live-camera .pose-point { fill: var(--pc-color-text-primary); }
+.live-rail { display: flex; flex-direction: column; padding: 24px; }
+.live-rail p, .live-rail span { color: var(--pc-color-text-secondary); }
+.live-reps { margin: 20px 0; font-size: 48px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.live-alert { margin: 16px 0; padding: 12px 0; border-top: 1px solid var(--pc-color-border); border-bottom: 1px solid var(--pc-color-border); color: var(--pc-warning-300); font-size: 14px; line-height: 1.5; }
+.live-actions { display: grid; gap: 12px; margin-top: auto; }
+.live-actions .action { background: var(--pc-primary-300); color: var(--pc-neutral-900); }
+.live-actions .action.secondary { border: 1px solid var(--pc-color-border); background: transparent; color: var(--pc-color-text-primary); }
+.result-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); gap: 32px; }
+.result-highlight { padding: 28px; background: var(--pc-primary-50); }
+.result-score { margin: 8px 0 20px; font-size: 48px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pain-check { display: grid; gap: 12px; margin-top: 24px; }
+.pain-check input { width: 100%; accent-color: var(--pc-primary-700); }
+.patient-list { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; }
+.patient-queue { display: grid; align-content: start; gap: 4px; }
+.patient-link { display: block; padding: 14px 16px; border-left: 2px solid transparent; color: var(--pc-neutral-700); text-decoration: none; }
+.patient-link[aria-current="page"] { border-left-color: var(--pc-primary-700); background: var(--pc-primary-50); color: var(--pc-primary-800); }
+.patient-link:hover { background: var(--pc-neutral-100); }
+.patient-detail { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 28px; }
+.patient-detail-offset { margin-top: 24px; }
+.report-table { width: 100%; border-collapse: collapse; background: var(--pc-color-surface); text-align: left; }
+.report-table th, .report-table td { padding: 14px 16px; border-bottom: 1px solid var(--pc-color-border); font-size: 14px; }
+.report-table th { color: var(--pc-color-text-secondary); font-size: 12px; }
+.report-chart { display: block; width: 100%; height: 190px; margin-top: 16px; }
+.report-chart path { fill: none; stroke: var(--pc-primary-600); stroke-width: 4; stroke-linecap: round; }
+.report-chart .baseline { stroke: var(--pc-neutral-300); stroke-width: 1; }
+.attention-list { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.attention-list li { padding: 16px 0; border-bottom: 1px solid var(--pc-color-border); }
+.status { display: inline-flex; padding: 6px 8px; background: var(--pc-warning-100); color: var(--pc-warning-800); font-size: 12px; font-weight: 700; }
+.variant-b .patient-home-grid { grid-template-columns: minmax(260px, .7fr) minmax(0, 1.3fr); }
+.variant-b .patient-home-grid .measure-rail { order: -1; }
+.variant-b .movement-field { box-shadow: none; border-left: 4px solid var(--pc-primary-600); }
+.variant-b .session-track { max-width: 680px; }
+.variant-b .patient-list { grid-template-columns: 1fr; }
+.variant-b .patient-queue { grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--pc-color-border); }
+.variant-b .patient-link { border-left: 0; border-bottom: 2px solid transparent; }
+.variant-b .patient-link[aria-current="page"] { border-bottom-color: var(--pc-primary-700); }
+.variant-b .patient-detail { grid-template-columns: 1fr; }
+.variant-b .live-grid { grid-template-columns: minmax(0, 1fr) 260px; }
+.variant-b .result-grid { grid-template-columns: minmax(280px, .8fr) minmax(0, 1fr); }
+.variant-b .result-highlight { order: 1; }
+@media (max-width: 760px) {
+  .page { width: calc(100% - 32px); }
+  .topbar { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .route-screen { padding: 32px 0; }
+  .route-screen h1 { font-size: 30px; }
+  .entry-options, .patient-home-grid, .setup-grid, .live-grid, .result-grid, .patient-list, .patient-detail { grid-template-columns: 1fr; }
+  .variant-b .patient-home-grid .measure-rail, .variant-b .result-highlight { order: 0; }
+  .variant-b .patient-queue { grid-template-columns: 1fr; }
+  .live-rail { min-height: 380px; }
+  .report-table { min-width: 560px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}

@@ -20,7 +20,7 @@ required_files=(
   "ai/checklists/testing-checklist.md"
   "ai/checklists/design-review-checklist.md"
   "ai/skills/project-kickoff.md"
-  "ai/skills/design-craft.md"
+  "ai/skills/frontend-design.md"
   "ai/skills/project-search.md"
   "ai/skills/spec-interrogation.md"
   "ai/skills/ui-mockup-gate.md"
@@ -58,6 +58,8 @@ for name in "${skill_names[@]}"; do
 done
 
 for dir in .claude/skills/*/ .codex/skills/*/; do
+  # Ignore empty directories left behind by file moves; they are not installed skills.
+  [[ -f "$dir/SKILL.md" ]] || continue
   name="$(basename "$dir")"
   if [[ ! -f "ai/skills/$name.md" ]]; then
     echo "dangling stub: $dir points at ai/skills/$name.md, which does not exist"
@@ -71,4 +73,3 @@ if [[ "$missing" -ne 0 ]]; then
 fi
 
 echo "governance kit check passed"
-

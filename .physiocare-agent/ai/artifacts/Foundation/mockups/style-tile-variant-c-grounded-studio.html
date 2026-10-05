@@ -1,0 +1,79 @@
+<!-- PhysioCare — Revised S2 style tile C: Grounded Studio. Expected result: a focused live-session visual direction that connects to the current camera demo while keeping clinical signals calm and legible. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · C — Grounded Studio</title>
+    <style>
+      :root { color-scheme:dark; --ground:#183432; --stage:#263f3d; --ink:#f3f5ee; --muted:#b3c2b9; --leaf:#93c1a5; --brass:#d4a85f; --edge:#49605b; --alert:#e1a171; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--ground); color:var(--ink); font-family:Aptos,"PingFang TC","Microsoft JhengHei",system-ui,sans-serif; letter-spacing:0; }
+      main { width:min(1180px,calc(100% - 64px)); margin:24px auto 40px; }
+      header { display:flex; justify-content:space-between; align-items:center; padding-bottom:18px; border-bottom:1px solid var(--edge); }
+      .brand { display:flex; align-items:center; gap:12px; font-size:20px; font-weight:700; }
+      .mark { width:10px; height:10px; border-radius:50%; background:var(--leaf); }
+      .privacy { color:var(--muted); font-size:13px; }
+      .intro { display:flex; justify-content:space-between; align-items:end; gap:32px; padding:28px 0 20px; }
+      h1 { margin:0; font-size:30px; line-height:1.25; }
+      h2 { margin:0; font-size:18px; }
+      p { margin:6px 0 0; color:var(--muted); font-size:14px; line-height:1.6; }
+      .status { color:var(--leaf); font-size:14px; font-weight:600; }
+      .workspace { display:grid; grid-template-columns:minmax(0,1fr) 280px; min-height:470px; background:var(--stage); }
+      .camera { position:relative; display:grid; place-items:center; min-height:420px; padding:24px; background:#314944; }
+      .camera svg { width:min(460px,90%); height:340px; }
+      .camera-caption { position:absolute; bottom:20px; left:24px; color:var(--muted); font-size:13px; }
+      .rail { display:flex; flex-direction:column; padding:28px 24px; }
+      .rep { display:flex; align-items:baseline; gap:8px; margin:24px 0; }
+      .rep strong { font-size:48px; line-height:1; font-variant-numeric:tabular-nums; }
+      .rep span { color:var(--muted); font-size:14px; }
+      .signal { padding:16px 0; border-top:1px solid var(--edge); border-bottom:1px solid var(--edge); }
+      .signal strong { display:block; margin-bottom:6px; color:var(--leaf); font-size:16px; }
+      .signal p { margin:0; }
+      .angles { display:flex; justify-content:space-between; gap:12px; margin:20px 0; }
+      .angles div { display:flex; flex-direction:column; gap:6px; }
+      .angles span { color:var(--muted); font-size:12px; }
+      .angles strong { font-size:20px; font-variant-numeric:tabular-nums; }
+      .controls { display:grid; gap:12px; margin-top:auto; }
+      button { min-height:48px; padding:12px 16px; border:1px solid var(--leaf); background:var(--leaf); color:#183432; font:inherit; font-size:16px; font-weight:700; cursor:pointer; }
+      button:hover { background:#add1b8; border-color:#add1b8; }
+      button:focus-visible { outline:3px solid var(--brass); outline-offset:3px; }
+      button.secondary { border-color:var(--edge); background:transparent; color:var(--ink); }
+      button.secondary:hover { background:#38524d; }
+      .note { display:flex; gap:10px; align-items:center; margin-top:20px; color:var(--muted); font-size:13px; }
+      .swatches { display:flex; gap:6px; }
+      .swatch { width:18px; height:18px; border-radius:50%; }
+      .swatch-ground { background:var(--ground); }
+      .swatch-stage { background:var(--stage); }
+      .swatch-leaf { background:var(--leaf); }
+      .swatch-brass { background:var(--brass); }
+      @media(max-width:760px) { main { width:calc(100% - 32px); margin-top:16px; } .intro { align-items:flex-start; flex-direction:column; gap:12px; } .workspace { grid-template-columns:1fr; } .camera { min-height:320px; } .camera svg { height:260px; } .rail { min-height:420px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header><div class="brand"><span class="mark" aria-hidden="true"></span><span>PhysioCare</span></div><div class="privacy">鏡頭分析在此裝置進行 · Video stays on this device</div></header>
+      <section class="intro"><div><h1>椅子深蹲</h1><p>跟著自己的節奏完成動作；有需要時可隨時暫停。</p></div><div class="status">● 正在分析姿勢</div></section>
+      <section class="workspace" aria-label="Live squat analysis sample">
+        <div class="camera">
+          <svg viewBox="0 0 460 340" role="img" aria-label="即時深蹲姿勢骨架示意">
+            <path d="M40 292H420" stroke="var(--edge)" stroke-width="2" />
+            <path d="M238 70C275 100 292 138 285 176C280 204 260 225 244 246" fill="none" stroke="var(--brass)" stroke-width="2" stroke-dasharray="5 8" />
+            <circle cx="236" cy="54" r="18" fill="none" stroke="var(--leaf)" stroke-width="4" />
+            <path d="M236 74L232 145L286 174L320 240M232 145L180 178L148 246M232 145L286 174L280 235L320 292M232 145L180 178L186 238L148 292" fill="none" stroke="var(--leaf)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="232" cy="145" r="6" fill="var(--ink)" /><circle cx="286" cy="174" r="6" fill="var(--ink)" /><circle cx="180" cy="178" r="6" fill="var(--ink)" />
+            <path d="M288 180L350 166" stroke="var(--brass)" stroke-width="2" /><text x="356" y="170" fill="var(--ink)" font-size="13" font-family="Aptos,sans-serif">膝部路徑</text>
+          </svg>
+          <div class="camera-caption">姿勢骨架示意 · Pose landmark overlay</div>
+        </div>
+        <aside class="rail">
+          <div><h2>目前進度</h2><div class="rep"><strong>08</strong><span>/ 10 次</span></div></div>
+          <div class="signal"><strong>動作保持穩定</strong><p>膝部路徑在本次目標範圍內。這是即時測量回饋。</p></div>
+          <div class="angles"><div><span>膝部角度</span><strong>92°</strong></div><div><span>動作品質</span><strong>84</strong></div></div>
+          <div class="controls"><button type="button">結束並看結果 Finish</button><button class="secondary" type="button">暫停 Pause</button></div>
+        </aside>
+      </section>
+      <footer class="note"><span class="swatches" aria-label="Color palette"><i class="swatch swatch-ground"></i><i class="swatch swatch-stage"></i><i class="swatch swatch-leaf"></i><i class="swatch swatch-brass"></i></span><span>Deep petrol · Mineral · Leaf · Brass</span></footer>
+    </main>
+  </body>
+</html>

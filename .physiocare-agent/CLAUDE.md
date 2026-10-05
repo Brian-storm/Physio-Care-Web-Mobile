@@ -4,7 +4,7 @@
 
 本檔案為 Claude Code 專屬的路由層，補充上方 `AGENTS.md` 所定義的共用作業規則與流程（該檔案也供 Codex 等其他 AI 工具讀取，為單一事實來源）。詳細規則位於 `.physiocare-agent/ai/process/`。
 
-- 保持 `CLAUDE.md` 簡短。可重複使用的工作流程放在 `.claude/skills/`。
+- 保持 `CLAUDE.md` 簡短。可跨 agent 重用的 skill 放在 `.agents/skills/`，Claude 專用工作流程放在 `.claude/skills/`。
 
 ## Skill 路由
 
@@ -12,7 +12,7 @@
 - 程式碼庫搜尋：`project-search`
 - 需求釐清：`spec-interrogation`
 - UI 替代方案與畫面狀態：`ui-mockup-gate`
-- UI 視覺品質與設計工藝：`design-craft`
+- UI 視覺規劃與品質審查：`frontend-design`
 - 技術規劃與任務卡：`implementation-plan`
 - 安全性與可維護性審查：`security-maintainability-review`
 - 測試與驗證證據：`test-verification`

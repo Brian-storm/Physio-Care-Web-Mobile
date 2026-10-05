@@ -1,0 +1,41 @@
+<!-- PhysioCare — S5 therapist workspace layout B: Timeline-first. Expected result: compare a roster-first clinician layout with the same Kinetic Atlas visual system and patient evidence. -->
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PhysioCare · Therapist workspace B — Timeline first</title>
+    <link rel="stylesheet" href="../../../../../frontend/src/styles/tokens.css" />
+    <link rel="stylesheet" href="./phase1-layout-mockups.css" />
+  </head>
+  <body>
+    <main class="page therapist-variant-b variant-b">
+      <header class="topbar"><div class="brand"><span class="brand-mark" aria-hidden="true"></span>PhysioCare</div><div class="topbar-meta">治療師 Physiotherapist · 示範工作區</div></header>
+      <nav class="flow-nav" aria-label="Therapist journey"><a href="#entry">入口</a><a href="#therapist-list">患者名單</a><a href="#patient-detail">患者概覽</a><a href="#progress">進度報告</a></nav>
+
+      <section id="entry" class="route-screen">
+        <h1>在患者回診之前，先看見居家訓練。</h1>
+        <p class="screen-intro">從每次練習的動作品質、完成狀態與患者感受，快速找到需要人工檢視的變化。</p>
+        <div class="entry-options"><div class="entry-option"><h2>治療師工作區</h2><p>患者名單與進度報告集中在同一個檢視流程。</p><a class="action" href="#therapist-list">查看患者進度</a></div><div class="entry-option"><h2>患者工作區</h2><p>患者可開始居家動作分析並回報訓練感受。</p><a class="action secondary" href="./phase1-patient-layout-variant-b.html#patient-home">查看患者流程</a></div></div>
+      </section>
+
+      <section id="therapist-list" class="route-screen">
+        <h1>所有患者的最近訓練</h1>
+        <p class="screen-intro">按最近活動快速檢視示範患者。需要留意的項目會以文字和狀態色共同標示。</p>
+        <table class="report-table"><thead><tr><th>患者</th><th>復健目標</th><th>最近訓練</th><th>動作品質</th><th>狀態</th></tr></thead><tbody><tr><td><a href="#patient-detail">Maya Chen</a></td><td>穩定膝部控制</td><td>今天 · 椅子深蹲</td><td>84 / 100</td><td><span class="status">需留意 1 次</span></td></tr><tr><td><a href="#patient-detail">Jordan Lee</a></td><td>增加肩部活動</td><td>昨天 · 肩部活動</td><td>88 / 100</td><td>趨勢穩定</td></tr><tr><td><a href="#patient-detail">Alex Wong</a></td><td>改善步態控制</td><td>2 天前 · 站立練習</td><td>76 / 100</td><td>待查看</td></tr></tbody></table>
+      </section>
+
+      <section id="patient-detail" class="route-screen">
+        <h1>Maya Chen 的訓練摘要</h1>
+        <p class="screen-intro">穩定膝部控制，逐步建立下肢力量。以下是最近一次椅子深蹲測量與患者自我回報。</p>
+        <div class="patient-detail"><div><div class="measure-row"><span>完成次數</span><strong>8 / 10</strong></div><div class="measure-row"><span>動作品質</span><strong>84 / 100</strong></div><div class="measure-row"><span>最高風險分數</span><strong>24 / 100</strong></div><div class="measure-row"><span>疼痛自評</span><strong>2 / 10</strong></div><div class="privacy-note">測量與患者自我回報提供檢視脈絡，臨床決定仍由治療師作出。</div><a class="action" href="#progress">查看訓練時間線</a></div><aside><h2>待留意訊號</h2><ul class="attention-list"><li><span class="status">需人工檢視</span><p>今日 1 次膝部控制訊號。</p></li><li><span class="muted">訓練依從性</span><p>本週已完成 3 / 4 次訓練。</p></li></ul></aside></div>
+      </section>
+
+      <section id="progress" class="route-screen">
+        <h1>從多次練習看趨勢。</h1>
+        <p class="screen-intro">時間線讓你把完成狀態、測量變化與患者感受一起檢視。</p>
+        <div class="patient-list"><aside class="patient-queue" aria-label="Patient selector"><a class="patient-link" href="#patient-detail" aria-current="page"><strong>Maya Chen</strong><br /><span class="muted">椅子深蹲</span></a><a class="patient-link" href="#patient-detail"><strong>Jordan Lee</strong><br /><span class="muted">肩部活動</span></a><a class="patient-link" href="#patient-detail"><strong>Alex Wong</strong><br /><span class="muted">站立練習</span></a></aside><div><div class="measure-rail"><h2>Maya Chen · 動作品質趨勢</h2><svg class="report-chart" viewBox="0 0 600 190" role="img" aria-label="動作品質四次訓練趨勢上升"><path class="baseline" d="M20 160H580"/><path d="M28 142C112 135 145 118 214 120S332 93 398 96S492 67 568 42"/></svg><div class="measure-row"><span>本週完成</span><strong>3 / 4 次</strong></div><div class="measure-row"><span>動作品質平均</span><strong>84 / 100</strong></div></div><table class="report-table"><thead><tr><th>日期</th><th>完成</th><th>品質</th><th>疼痛自評</th><th>檢視</th></tr></thead><tbody><tr><td>今天</td><td>8 / 10</td><td>84</td><td>2 / 10</td><td><span class="status">需留意</span></td></tr><tr><td>10 月 2 日</td><td>10 / 10</td><td>79</td><td>1 / 10</td><td>一般</td></tr><tr><td>9 月 30 日</td><td>10 / 10</td><td>75</td><td>2 / 10</td><td>一般</td></tr></tbody></table><p class="privacy-note">數據用於治療師檢視，不自動診斷或調整處方。</p></div></div>
+      </section>
+    </main>
+  </body>
+</html>

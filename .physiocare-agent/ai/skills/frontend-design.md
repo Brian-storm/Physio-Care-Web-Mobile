@@ -1,6 +1,6 @@
-# 設計工藝（Design Craft）
+# PhysioCare 前端設計準則（Frontend Design Standards）
 
-任何產出 UI mockup 或前端視覺實作的任務都適用。`ui-mockup-gate` 管的是**流程**（幾個變體、哪些狀態、誰核准）；這份 skill 管的是**品質**——沒有它，流程走完也可能產出醜的東西。原則整理自《Refactoring UI》（Adam Wathan & Steve Schoger）。
+本文件是 OpenCode `frontend-design` skill 的 PhysioCare 專案補充準則。任何 UI mockup 或前端視覺實作都適用。上游 skill 提供設計方向、版面規劃與自我評析；本文件補充本專案的 design token、品質檢查與參考要求。`ui-mockup-gate` 管的是**流程**（幾個變體、哪些狀態、誰核准）；`frontend-design` skill 與本文件共同管視覺品質。原則整理自《Refactoring UI》（Adam Wathan & Steve Schoger）。
 
 ## 何時使用
 

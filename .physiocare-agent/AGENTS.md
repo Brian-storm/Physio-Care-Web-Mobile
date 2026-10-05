@@ -11,7 +11,7 @@
 - 宣告完成前使用 `.physiocare-agent/ai/process/definition-of-done.md`。
 - UI 變更需要畫面規格與 mockup 決策紀錄（以 `.physiocare-agent/ai/templates/screen-spec.md`、`.physiocare-agent/ai/templates/mockup-decision.md` 為範本，產出到 `ai/artifacts/<Epic>/`），並先對照 `ai/context/design-system.md`：重用既有 design token 與元件，缺的元件照既有風格補做並登記回元件庫 inventory。
 - 範本（`.physiocare-agent/ai/templates/`）唯讀；所有填寫完成的產出物依 `.physiocare-agent/ai/artifacts/README.md` 的慣例存放。
-- 任何 mockup 或前端視覺實作，套用 `.physiocare-agent/skills/design-craft/SKILL.md` 的設計工藝紀律，交付前對照 `.physiocare-agent/ai/checklists/design-review-checklist.md`。
+- 任何 mockup 或前端視覺實作，使用 `.agents/skills/frontend-design/SKILL.md` 作為唯一設計 skill，並套用 `.physiocare-agent/ai/skills/frontend-design.md` 的 PhysioCare 專案準則；交付前對照 `.physiocare-agent/ai/checklists/design-review-checklist.md`。
 - Epic 0 的 UI 設計系統須依五階段（框架 → 風格 → design token → 元件庫 → 版面）分關卡展開，不得一步到位直接畫版面（見 `.physiocare-agent/skills/project-kickoff/SKILL.md` 步驟 2a）。
 - 高風險變更需要架構、安全性與測試審查關卡（review gate）。
 - 優先採用既有專案模式，而非新增抽象層。
