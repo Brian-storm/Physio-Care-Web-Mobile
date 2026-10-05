@@ -1,21 +1,23 @@
-/* PhysioCare — Exercise state machine engine: rep counting, form scoring, danger assessment */
+/* PhysioCare — Aspect-corrected squat geometry, rep tracking, and heuristic feedback. */
 
-import { ExercisePhase, ExerciseState, JointAngle } from '@/types/pose';
+import type { ExercisePhase, ExerciseState, JointAngle } from '@/types/pose';
 import {
-  calculateKneeAngle,
   calculateHipAngle,
-  calculateTorsoAngle,
+  calculateKneeAngle,
   calculateKneeValgus,
+  calculateTorsoAngle,
 } from './angles';
 
-/** Raw landmark point from MediaPipe for a single joint */
+/** MediaPipe landmark coordinates for one joint. */
 interface RawLandmark {
   x: number;
   y: number;
   z: number;
+  /** MediaPipe visibility confidence in the range 0–1 when available. */
+  visibility?: number;
 }
 
-/** Set of 8 key landmarks needed for squat analysis (bilateral) */
+/** Bilateral landmarks required to analyze one squat frame. */
 interface LandmarkSet {
   leftShoulder: RawLandmark;
   rightShoulder: RawLandmark;
@@ -27,193 +29,329 @@ interface LandmarkSet {
   rightAnkle: RawLandmark;
 }
 
-/** Internal phase type for the squat state machine */
-type SquatPhase = 'idle' | 'descending' | 'bottom' | 'ascending' | 'completed';
+/** Weighted candidate measurement from one visible body side. */
+interface Measurement {
+  value: number;
+  confidence: number;
+}
+
+/** Smoothed angles used to reduce frame-to-frame pose jitter. */
+interface SmoothedAngles {
+  knee: number;
+  hip: number;
+  torso: number;
+  valgus: number;
+}
+
+/** Knee angle displayed as the squat's target (interior angle, degrees). */
+export const SQUAT_KNEE_TARGET_ANGLE = 90;
+
+/** Maximum smoothed knee angle accepted as reaching the squat bottom. */
+export const SQUAT_BOTTOM_ANGLE_THRESHOLD = 110;
 
 /**
- * SquatEngine — real-time squat analysis state machine.
+ * Analyze squat landmarks one camera frame at a time.
  *
- * Tracks the 5-phase cycle (idle → descending → bottom → ascending → completed),
- * counts reps, scores form quality, and computes a danger score.
- * Designed for 0-latency feedback in browser.
+ * The engine corrects normalized x coordinates for the video aspect ratio,
+ * calculates left and right joint angles independently, combines measurements
+ * using MediaPipe visibility, and smooths those measurements before evaluating
+ * rep phases. Its scores remain heuristic estimates from a single camera view.
  */
 export class SquatEngine {
-  private phase: SquatPhase = 'idle';
+  /** Current phase in the repetition state machine. */
+  private phase: ExercisePhase = 'idle';
+
+  /** Count of fully completed repetitions. */
   private repCount = 0;
+
+  /** Current per-frame feedback values. */
   private formScore = 100;
-  private isFlagged = false;
   private dangerScore = 0;
-  private previousKneeAngle = 180;
-  private bottomFrames = 0;
-  private valgusWarning = false;
+  private isFlagged = false;
 
-  /** Minimum consecutive frames required before transitioning to next phase (noise filter) */
-  private readonly MIN_FRAMES = 5;
-  private phaseFrameCount = 0;
+  /** Candidate phase and consecutive frames used to debounce transitions. */
+  private candidatePhase: ExercisePhase | null = null;
+  private candidateFrameCount = 0;
 
+  /** Previous filtered measurements and last valid UI snapshot. */
+  private smoothedAngles: SmoothedAngles | null = null;
+  private lastState: ExerciseState | null = null;
+
+  /** A short stable-frame requirement tolerates brief landmark jitter. */
+  private readonly MIN_PHASE_FRAMES = 3;
+
+  /** Ignore a side when any landmark needed for its measurement is less visible. */
+  private readonly MIN_VISIBILITY = 0.5;
+
+  /** EMA response: higher values react faster, lower values smooth more. */
+  private readonly SMOOTHING_ALPHA = 0.35;
+
+  /** Prescribed display targets; rep/set completion is based on these values. */
   readonly targetSets = 3;
   readonly targetReps = 12;
 
-  /** Midpoint between left and right shoulder */
-  private midShoulder(landmarks: LandmarkSet): { x: number; y: number } {
-    return {
-      x: (landmarks.leftShoulder.x + landmarks.rightShoulder.x) / 2,
-      y: (landmarks.leftShoulder.y + landmarks.rightShoulder.y) / 2,
-    };
-  }
+  /**
+   * Return a neutral UI snapshot before a usable camera pose is available.
+   * This does not feed placeholder coordinates through the angle or phase math.
+   */
+  getInitialState(): ExerciseState {
+    const angles: JointAngle[] = [
+      {
+        name: 'Knee Flexion',
+        value: 0,
+        target: SQUAT_KNEE_TARGET_ANGLE,
+        deviation: SQUAT_KNEE_TARGET_ANGLE,
+        status: 'under',
+      },
+      { name: 'Hip Flexion', value: 0, target: 75, deviation: 75, status: 'under' },
+      { name: 'Torso Lean', value: 0, target: 15, deviation: 15, status: 'under' },
+    ];
 
-  /** Midpoint between left and right hip */
-  private midHip(landmarks: LandmarkSet): { x: number; y: number } {
     return {
-      x: (landmarks.leftHip.x + landmarks.rightHip.x) / 2,
-      y: (landmarks.leftHip.y + landmarks.rightHip.y) / 2,
-    };
-  }
-
-  /** Midpoint between left and right knee */
-  private midKnee(landmarks: LandmarkSet): { x: number; y: number } {
-    return {
-      x: (landmarks.leftKnee.x + landmarks.rightKnee.x) / 2,
-      y: (landmarks.leftKnee.y + landmarks.rightKnee.y) / 2,
-    };
-  }
-
-  /** Midpoint between left and right ankle */
-  private midAnkle(landmarks: LandmarkSet): { x: number; y: number } {
-    return {
-      x: (landmarks.leftAnkle.x + landmarks.rightAnkle.x) / 2,
-      y: (landmarks.leftAnkle.y + landmarks.rightAnkle.y) / 2,
+      exercise: 'Squat',
+      phase: 'idle',
+      repCount: 0,
+      setCount: 1,
+      targetSets: this.targetSets,
+      targetReps: this.targetReps,
+      angles,
+      formScore: 100,
+      dangerScore: 0,
+      isFlagged: false,
+      timestamp: Date.now(),
     };
   }
 
   /**
-   * Process a single frame of landmark data and return the updated exercise state.
-   * @param landmarks — the 8 key landmarks for this frame
-   * @returns current ExerciseState snapshot
+   * Convert normalized image coordinates to a square-pixel-equivalent plane.
+   * Scaling x by width/height fixes the angle distortion caused by treating
+   * normalized x and y as though they represented equal pixel distances.
    */
-  update(landmarks: LandmarkSet): ExerciseState {
-    const shoulder = this.midShoulder(landmarks);
-    const hip = this.midHip(landmarks);
-    const knee = this.midKnee(landmarks);
-    const ankle = this.midAnkle(landmarks);
-    const leftKnee = landmarks.leftKnee;
-    const leftHip = landmarks.leftHip;
-    const leftAnkle = landmarks.leftAnkle;
-    const rightKnee = landmarks.rightKnee;
-    const rightHip = landmarks.rightHip;
-    const rightAnkle = landmarks.rightAnkle;
+  private toMetricPoint(point: RawLandmark, aspectRatio: number): RawLandmark {
+    return { ...point, x: point.x * aspectRatio };
+  }
 
-    const kneeAngle = calculateKneeAngle(hip, knee, ankle);
-    const hipAngle = calculateHipAngle(shoulder, hip, knee);
-    const torsoAngle = calculateTorsoAngle(shoulder, hip);
-    const leftValgus = calculateKneeValgus(leftHip, leftKnee, leftAnkle);
-    const rightValgus = calculateKneeValgus(rightHip, rightKnee, rightAnkle);
-    const kneeValgus = Math.max(leftValgus, rightValgus);
+  /** Use the least-visible point in a measurement as its confidence weight. */
+  private confidence(...points: RawLandmark[]): number {
+    return Math.min(...points.map((point) => {
+      const visibility = point.visibility ?? 1;
+      return Math.max(0, Math.min(1, visibility));
+    }));
+  }
 
-    // Phase state machine with minimum frame thresholds
-    const isDescending = kneeAngle < 120 && this.phase !== 'bottom';
-    const isBottom = kneeAngle <= 90;
-    const isAscending = this.phase === 'bottom' && kneeAngle > 95;
-    const isCompleted = this.phase === 'ascending' && kneeAngle > 160;
+  /** Average usable side measurements, weighting more-visible sides more. */
+  private weightedAverage(measurements: Measurement[]): number | null {
+    const usable = measurements.filter(
+      ({ value, confidence }) => Number.isFinite(value) && confidence >= this.MIN_VISIBILITY
+    );
+    const totalConfidence = usable.reduce((sum, item) => sum + item.confidence, 0);
 
-    // Track consecutive frames in current phase
-    const phaseUnchanged =
-      (this.phase === 'idle' && !isDescending) ||
-      (this.phase === 'descending' && !isBottom) ||
-      (this.phase === 'bottom' && !isAscending) ||
-      (this.phase === 'ascending' && !isCompleted);
+    if (totalConfidence === 0) return null;
 
-    if (phaseUnchanged) {
-      this.phaseFrameCount++;
-    } else {
-      this.phaseFrameCount = 0;
+    return usable.reduce(
+      (sum, item) => sum + item.value * item.confidence,
+      0
+    ) / totalConfidence;
+  }
+
+  /** Apply an exponential moving average to one angle or alignment value. */
+  private smooth(value: number, previous: number | undefined): number {
+    if (previous === undefined) return value;
+    return previous + this.SMOOTHING_ALPHA * (value - previous);
+  }
+
+  /**
+   * Determine the next phase candidate using separate enter/exit thresholds.
+   * The gaps between thresholds provide hysteresis so small angle fluctuations
+   * do not repeatedly switch the candidate phase.
+   */
+  private getCandidatePhase(kneeAngle: number): ExercisePhase | null {
+    switch (this.phase) {
+      case 'idle':
+        return kneeAngle < 160 ? 'descending' : null;
+      case 'descending':
+        if (kneeAngle <= SQUAT_BOTTOM_ANGLE_THRESHOLD) return 'bottom';
+        if (kneeAngle >= 170) return 'idle';
+        return null;
+      case 'bottom':
+        return kneeAngle >= 120 ? 'ascending' : null;
+      case 'ascending':
+        if (kneeAngle >= 160) return 'completed';
+        if (kneeAngle <= 100) return 'bottom';
+        return null;
+      case 'completed':
+        return null;
     }
+  }
 
-    let newPhase: SquatPhase = this.phase;
-
-    if (isCompleted && this.phaseFrameCount >= this.MIN_FRAMES) {
-      newPhase = 'completed';
-      this.repCount += 1;
-    } else if (isBottom && this.phase === 'descending' && this.phaseFrameCount >= this.MIN_FRAMES) {
-      newPhase = 'bottom';
-      this.bottomFrames += 1;
-    } else if (isDescending && (this.phase === 'idle' || this.phase === 'completed') && this.phaseFrameCount >= this.MIN_FRAMES) {
-      newPhase = 'descending';
-    } else if (isAscending && this.phaseFrameCount >= this.MIN_FRAMES) {
-      newPhase = 'ascending';
-    }
-
-    // Reset counter on phase change
-    if (newPhase !== this.phase) {
-      this.phaseFrameCount = 0;
-    }
-
-    // Reset after completion
-    if (newPhase === 'completed') {
+  /** Advance the phase only after one candidate has held for enough frames. */
+  private updatePhase(kneeAngle: number): void {
+    // Keep `completed` visible for the frame in which it is emitted, then begin
+    // the next repetition from idle on the following frame.
+    if (this.phase === 'completed') {
       this.phase = 'idle';
-    } else {
-      this.phase = newPhase;
+      this.candidatePhase = null;
+      this.candidateFrameCount = 0;
     }
 
-    this.previousKneeAngle = kneeAngle;
+    const candidate = this.getCandidatePhase(kneeAngle);
+    if (candidate === null) {
+      this.candidatePhase = null;
+      this.candidateFrameCount = 0;
+      return;
+    }
 
-    // Form scoring
+    if (candidate === this.candidatePhase) {
+      this.candidateFrameCount += 1;
+    } else {
+      this.candidatePhase = candidate;
+      this.candidateFrameCount = 1;
+    }
+
+    if (this.candidateFrameCount < this.MIN_PHASE_FRAMES) return;
+
+    this.phase = candidate;
+    this.candidatePhase = null;
+    this.candidateFrameCount = 0;
+
+    if (candidate === 'completed') this.repCount += 1;
+  }
+
+  /**
+   * Analyze one pose frame and return the state used by the live panel.
+   *
+   * @param landmarks - Bilateral shoulder, hip, knee, and ankle points.
+   * @param aspectRatio - Video width divided by video height; defaults to 1.
+   * @returns Current angles, phase, rep/set counts, and heuristic feedback.
+   */
+  update(landmarks: LandmarkSet, aspectRatio = 1): ExerciseState {
+    const safeAspectRatio = Number.isFinite(aspectRatio) && aspectRatio > 0
+      ? aspectRatio
+      : 1;
+    const point = (landmark: RawLandmark) => this.toMetricPoint(landmark, safeAspectRatio);
+
+    // Transform each side independently; do not create artificial joints by
+    // averaging left/right knees or ankles before calculating their angles.
+    const leftShoulder = point(landmarks.leftShoulder);
+    const rightShoulder = point(landmarks.rightShoulder);
+    const leftHip = point(landmarks.leftHip);
+    const rightHip = point(landmarks.rightHip);
+    const leftKnee = point(landmarks.leftKnee);
+    const rightKnee = point(landmarks.rightKnee);
+    const leftAnkle = point(landmarks.leftAnkle);
+    const rightAnkle = point(landmarks.rightAnkle);
+
+    const leftKneeConfidence = this.confidence(leftHip, leftKnee, leftAnkle);
+    const rightKneeConfidence = this.confidence(rightHip, rightKnee, rightAnkle);
+    const kneeAngle = this.weightedAverage([
+      {
+        value: calculateKneeAngle(leftHip, leftKnee, leftAnkle),
+        confidence: leftKneeConfidence,
+      },
+      {
+        value: calculateKneeAngle(rightHip, rightKnee, rightAnkle),
+        confidence: rightKneeConfidence,
+      },
+    ]);
+
+    // Ignore low-confidence frames rather than moving the state machine using
+    // guessed or occluded joint locations. A gap also breaks debounce streaks.
+    if (kneeAngle === null) {
+      this.candidatePhase = null;
+      this.candidateFrameCount = 0;
+      return this.lastState ?? this.getInitialState();
+    }
+
+    const leftHipConfidence = this.confidence(leftShoulder, leftHip, leftKnee);
+    const rightHipConfidence = this.confidence(rightShoulder, rightHip, rightKnee);
+    const rawHipAngle = this.weightedAverage([
+      {
+        value: calculateHipAngle(leftShoulder, leftHip, leftKnee),
+        confidence: leftHipConfidence,
+      },
+      {
+        value: calculateHipAngle(rightShoulder, rightHip, rightKnee),
+        confidence: rightHipConfidence,
+      },
+    ]);
+
+    const leftTorsoConfidence = this.confidence(leftShoulder, leftHip);
+    const rightTorsoConfidence = this.confidence(rightShoulder, rightHip);
+    const rawTorsoAngle = this.weightedAverage([
+      {
+        value: calculateTorsoAngle(leftShoulder, leftHip),
+        confidence: leftTorsoConfidence,
+      },
+      {
+        value: calculateTorsoAngle(rightShoulder, rightHip),
+        confidence: rightTorsoConfidence,
+      },
+    ]);
+
+    const bodyCenterX = (leftHip.x + rightHip.x) / 2;
+    const rawValgus = Math.max(
+      leftKneeConfidence >= this.MIN_VISIBILITY
+        ? calculateKneeValgus(leftHip, leftKnee, leftAnkle, bodyCenterX)
+        : 0,
+      rightKneeConfidence >= this.MIN_VISIBILITY
+        ? calculateKneeValgus(rightHip, rightKnee, rightAnkle, bodyCenterX)
+        : 0
+    );
+
+    // Visibility-weighted estimates are smoothed so one noisy detection is less
+    // likely to create a sudden angle jump or phase change.
+    const smoothed: SmoothedAngles = {
+      knee: this.smooth(kneeAngle, this.smoothedAngles?.knee),
+      hip: this.smooth(rawHipAngle ?? this.smoothedAngles?.hip ?? kneeAngle, this.smoothedAngles?.hip),
+      torso: this.smooth(rawTorsoAngle ?? this.smoothedAngles?.torso ?? 0, this.smoothedAngles?.torso),
+      valgus: this.smooth(rawValgus, this.smoothedAngles?.valgus),
+    };
+    this.smoothedAngles = smoothed;
+
+    this.updatePhase(smoothed.knee);
+    return this.createState(smoothed);
+  }
+
+  /** Convert current measurements and engine counters into the UI snapshot. */
+  private createState(measurements: SmoothedAngles): ExerciseState {
     let deductions = 0;
-
-    // Check torso lean (should be 0-30 degrees from vertical)
-    if (torsoAngle > 40) deductions += 15;
-    else if (torsoAngle > 30) deductions += 5;
-
-    // Check knee valgus
-    if (kneeValgus > 0.08) {
-      deductions += 20;
-      this.valgusWarning = true;
-    } else {
-      this.valgusWarning = false;
-    }
-
-    // Check depth (should reach at least ~90 degrees knee flexion)
-    if (this.phase === 'bottom' && kneeAngle > 100) deductions += 10;
-
+    if (measurements.torso > 40) deductions += 15;
+    else if (measurements.torso > 30) deductions += 5;
+    if (measurements.valgus > 0.1) deductions += 20;
     this.formScore = Math.max(0, 100 - deductions);
 
-    // Danger assessment
-    let danger = 0;
-    if (kneeValgus > 0.12) danger += 40;
-    if (torsoAngle > 50) danger += 30;
-    if (kneeAngle < 60) danger += 20;
-
-    this.dangerScore = Math.min(100, danger);
+    let risk = 0;
+    if (measurements.valgus > 0.18) risk += 40;
+    if (measurements.torso > 50) risk += 30;
+    if (measurements.knee < 60) risk += 20;
+    this.dangerScore = Math.min(100, risk);
     this.isFlagged = this.dangerScore > 75;
 
     const angles: JointAngle[] = [
       {
         name: 'Knee Flexion',
-        value: Math.round(kneeAngle),
-        target: 90,
-        deviation: Math.abs(kneeAngle - 90),
-        status:
-          kneeAngle < 85 ? 'under' : kneeAngle > 100 ? 'over' : 'target',
+        value: Math.round(measurements.knee),
+        target: SQUAT_KNEE_TARGET_ANGLE,
+        deviation: Math.abs(measurements.knee - SQUAT_KNEE_TARGET_ANGLE),
+        status: measurements.knee < 85 ? 'under' : measurements.knee > 100 ? 'over' : 'target',
       },
       {
         name: 'Hip Flexion',
-        value: Math.round(hipAngle),
+        value: Math.round(measurements.hip),
         target: 75,
-        deviation: Math.abs(hipAngle - 75),
-        status:
-          hipAngle < 70 ? 'under' : hipAngle > 85 ? 'over' : 'target',
+        deviation: Math.abs(measurements.hip - 75),
+        status: measurements.hip < 70 ? 'under' : measurements.hip > 85 ? 'over' : 'target',
       },
       {
         name: 'Torso Lean',
-        value: Math.round(torsoAngle),
+        value: Math.round(measurements.torso),
         target: 15,
-        deviation: Math.abs(torsoAngle - 15),
-        status:
-          torsoAngle < 10 ? 'under' : torsoAngle > 30 ? 'over' : 'target',
+        deviation: Math.abs(measurements.torso - 15),
+        status: measurements.torso < 10 ? 'under' : measurements.torso > 30 ? 'over' : 'target',
       },
     ];
 
-    return {
+    const state: ExerciseState = {
       exercise: 'Squat',
       phase: this.phase,
       repCount: this.repCount,
@@ -226,23 +364,26 @@ export class SquatEngine {
       isFlagged: this.isFlagged,
       timestamp: Date.now(),
     };
+
+    this.lastState = state;
+    return state;
   }
 
-  /** Reset all counters and state for a fresh session */
+  /** Reset phase tracking, filters, counters, and scores for a new session. */
   reset(): void {
     this.phase = 'idle';
     this.repCount = 0;
     this.formScore = 100;
-    this.isFlagged = false;
     this.dangerScore = 0;
-    this.previousKneeAngle = 180;
-    this.bottomFrames = 0;
-    this.valgusWarning = false;
-    this.phaseFrameCount = 0;
+    this.isFlagged = false;
+    this.candidatePhase = null;
+    this.candidateFrameCount = 0;
+    this.smoothedAngles = null;
+    this.lastState = null;
   }
 
-  /** Get current phase without updating */
-  getPhase(): SquatPhase {
+  /** Read the current phase without processing another frame. */
+  getPhase(): ExercisePhase {
     return this.phase;
   }
 }
