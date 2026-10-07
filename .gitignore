@@ -15,3 +15,9 @@ build/
 .idea/
 opencode.jsonc
 backend/physiocare.db
+
+# Cloudflare demo build output and generated MediaPipe runtime
+frontend/out/
+frontend/public/wasm/
+.wrangler/
+.dev.vars*

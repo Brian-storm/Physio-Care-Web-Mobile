@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "physiocare-demo",
+  "account_id": "ec8010aae582c44feffb276276eda6ce",
+  "compatibility_date": "2026-10-07",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page"
+  }
+}
