@@ -6,7 +6,14 @@
 
 - Owner 已選擇保留 Pages URL，以 HTTPS proxy 接到專用 Account Worker。
 - 新 Worker 已部署，Individual Workers Editor Token 已驗證可用，GitHub repository Secrets 已設定；Token 到期 2027-01-06。
-- Gateway v2 正在 preview 驗證；PR 合併、production 切換與首次 CI 成功仍待記錄。
+- [PR #4](https://github.com/Brian-storm/Physio-Care-Web-Mobile/pull/4) 已 squash 合併；app release commit：`a34dfe52a40ae02e7254a581ba4c54b97b683ed5`。
+- [首次 GitHub Actions](https://github.com/Brian-storm/Physio-Care-Web-Mobile/actions/runs/37597119321) 成功，完成於 2026-10-07 16:57 香港時間；含公開 gateway commit 驗證。
+- 新 Worker CI version：`39b4cc05-a133-455e-9cf1-da922689ef70`。
+- Pages production：`1b5ab4c1-9155-4ec0-8040-9b2fe6cd39ff`；preview：`0a974b22`。識別 header 為 `worker-http-v2`。
+- Production 和 preview 已無 Service Binding，均私下設定 `PHYSIOCARE_ORIGIN`。公開入口持續為 https://physio-care.pages.dev 。
+- 7 項 gateway tests、Next build/lint/types 通過；8 個路由／WASM／manifest／404 與新 Worker 的 body hash 一致；另驗 HEAD、POST 405 及同站 redirect。CI 後再次核對公開 manifest 為上述 release commit。
+- 瀏覽器 preview 患者→結果、production 治療師→進度導覽成功，未見 console errors。本次沒有重新做實體鏡頭驗收。
+- 已核對本次公開 Actions logs 沒有私下管理的 Account IDs 或 owner-specific hostnames。
 - 原 Account 的隊友權限未在本次遷移自動撤銷；專用 Account 成員需另行管理。
 
 ## 初始準備方案（歷史）
