@@ -1,49 +1,74 @@
-# PhysioCare Pages deployment
+# PhysioCare: fixed Pages URL, team-managed Worker
 
-Production: https://physio-care.pages.dev
+Public URL: https://physio-care.pages.dev
 
-## Team workflow
+```text
+Visitor → physio-care.pages.dev (owner-managed Pages Function)
+        → PHYSIOCARE service binding → physiocare-demo Worker + static assets
+```
 
-1. Create a feature branch in `Brian-storm/Physio-Care-Web-Mobile`.
-2. Open a PR and review the changes.
-3. Merge into `main`. Frontend or deployment-workflow changes trigger `.github/workflows/cloudflare-pages.yml`.
-4. GitHub Actions runs `npm ci`, `npm run build:cloudflare`, and uploads `frontend/out` to the `physio-care` Cloudflare Pages project.
-5. Check the Actions run before considering the website updated. The previous site remains available if a build fails.
+The Pages project forwards every path to the Worker without redirecting the browser. The Pages deployment contains only the gateway; it does not contain a stale copy of the application. Team website deployments target the existing `physiocare-demo` Worker. The gateway uses a fixed binding, never a caller-supplied origin or an account API token.
 
-The workflow can also be run manually from Actions on `main`. Other branches and PRs cannot publish production. It uses a standard Ubuntu runner, read-only GitHub contents permission, a 15-minute limit, no persistent build artifact/cache uploads, and serializes production deployments. Only the deploy step receives the Cloudflare token.
+## Current status
 
-## Activation still required
+- Production Pages gateway deployed; normal pages and WASM are forwarded.
+- Worker deployment and gateway unit tests passed; production evidence is in `cloudflare-gateway-verification.json`.
+- A subsequent Worker-only deployment is checked through `/deployment.json`, while the Pages production deployment remains unchanged.
+- No account-wide Pages token was created or shared.
+- Teammate invitations are deferred until the owner supplies confirmed Cloudflare login emails.
+- GitHub Actions has been changed to Worker deployment, but the PR is unmerged and the scoped deployment secret is not installed. Automatic deployment is NOT yet active.
 
-The dedicated Cloudflare API token has NOT been created or uploaded. Until the `CLOUDFLARE_API_TOKEN` repository secret is installed, automatic deployment will fail at the explicit credential check. The workflow must also be merged into `main` before push triggers are active.
+## Team permissions to configure later
 
-Required token: **Account / Cloudflare Pages / Edit**, limited to Cloudflare account `ec8010aae582c44feffb276276eda6ce`. This is an account-wide Pages permission: it also covers the DSE Pages projects in that account, not only PhysioCare. Approval is pending for sharing this scope with this repository's Actions. GitHub users who can change workflows can potentially use the deployment secret. The existing Wrangler OAuth token must never be copied into GitHub secrets.
+Invite confirmed Cloudflare accounts with **Individual Workers → physiocare-demo → Editor**, rather than account-wide Developer Platform, Pages or Workers Admin roles. Check the effective policy has no other resource scope. The current application Worker only has its own ASSETS binding; no DSE database, storage, service or secret bindings are configured.
 
-Create a dedicated token after approval, and store it as repository Actions secret `CLOUDFLARE_API_TOKEN`. The account ID is public configuration already in the workflow. Use a separate Cloudflare account for stronger isolation if required. No Cloudflare password or personal Wrangler credential is needed by teammates.
+Granular Wrangler access requires a suitable scoped API token; `wrangler login` OAuth does not currently support granular authorization. For CI, create a dedicated token scoped only to this existing Worker and store it as repository secret **PHYSIOCARE_WORKER_API_TOKEN**. Do not use the previously proposed account-wide `CLOUDFLARE_API_TOKEN` with Pages Edit, or copy a personal Wrangler OAuth token into GitHub.
 
-After merging and installing the secret, run the workflow once and verify both its success and the deployment commit on Cloudflare. The manual first deployment does not prove CI is working.
+The per-Worker role and token still need a real teammate/scoped-credential deployment test when access is configured. Creating new Workers or managing custom domains may require additional owner actions; do not broaden permissions as a workaround.
 
-## Why GitHub Actions
+## Team update workflow
 
-Cloudflare native Git integration returned error 8000011 (Git installation issue). GitHub Actions with Pages Direct Upload avoids depending on that installation. The Pages project is Direct Upload; switching it to native Git integration later requires recreation, so retain Actions as the deployment mechanism.
+1. Develop on a branch and open a PR.
+2. Review and merge frontend changes into `main`.
+3. Once activated, `.github/workflows/cloudflare-pages.yml` builds and deploys only `physiocare-demo`. Its filename is retained, but the workflow name and command target the Worker.
+4. The unchanged Pages gateway immediately serves the current Worker deployment. Confirm the Actions result and `/deployment.json`.
 
-## Local commands
+The workflow uses the free standard Ubuntu runner for this public repository, read-only GitHub contents permission, a 15-minute timeout and serialized deployment. No persistent build artifacts/cache are uploaded. The Worker token is provided only to credential-check and deployment steps, not dependency installation or build scripts. Deployment code is still repository-controlled, so collaborator write access should remain limited to trusted teammates.
 
-From `frontend`:
+From `frontend`, an authorized deployer can run:
 
 ```sh
 npm ci
-npm run build:cloudflare
-npm run preview:cloudflare
-npm run deploy:cloudflare
+npm run test:gateway
+npm run deploy:worker
 ```
 
-The legacy Worker is retained at https://physiocare-demo.1155234144.workers.dev . Its config is `wrangler.worker.jsonc`; only `npm run deploy:worker` targets it. Future Pages deployments do not update the legacy Worker.
+`npm run deploy:cloudflare` is an alias for the same Worker deployment.
 
-## Verification (2026-10-07)
+## Owner-only gateway maintenance
 
-- Next.js static build, lint and type checks passed.
-- Initial Pages upload completed: https://c80127d7.physio-care.pages.dev .
-- HTTP/header checks saved in `cloudflare-pages-http-checks.json`.
-- Automatic GitHub deployment remains pending token approval, secret installation and merge.
+Only the owner uses `npm run deploy:gateway`. The config is `frontend/gateway/wrangler.toml`; it binds PHYSIOCARE to physiocare-demo. Teammates do not need Pages Edit to update the app.
 
-Demo scope is unchanged: patient/result/progress pages use synthetic fixtures; camera analysis is browser-side; no backend/database/auth deployment.
+For a local combined preview, build once then run `npm run preview:gateway`. It explicitly supplies both Wrangler config paths because implicit Pages discovery did not expose the service binding in the tested CLI invocation.
+
+Do not deploy `frontend/out` directly to Pages after this setup: that would replace the gateway with a static snapshot.
+
+## Verification and limits
+
+- Four gateway tests verify request/body/header preservation, binary assets, 404/HEAD and uncacheable 503 failure handling.
+- Static Next.js build, lint and type checks pass.
+- Production HTTP checks compare the Pages responses with the Worker and confirm the gateway and cross-origin-isolation headers.
+- Browser navigation is verified on the fixed URL. Human camera/physical exercise accuracy is not newly validated by these routing tests.
+- Pages Function invocations use Workers request quota; this gateway is not purely free static-asset traffic.
+- The site's patient/results/progress fixtures remain synthetic. No backend/database/login integration is added.
+
+## Rollback
+
+Previous static Pages production deployment: `c80127d7-7215-4ee8-862f-f2287703a803`. The owner can select it under Pages deployments and roll back if the gateway fails. This restores a static snapshot and will stop reflecting Worker updates.
+
+Worker version before the gateway work: `8d9549f3-2b0b-4366-9058-ca7456d9f341`. Verify versions with `wrangler versions list --config wrangler.worker.jsonc` before choosing a rollback. Retain the gateway-compatible Worker when possible.
+
+References:
+- https://developers.cloudflare.com/pages/functions/bindings/#service-bindings
+- https://developers.cloudflare.com/workers/authorization/workers/
+- https://developers.cloudflare.com/pages/functions/pricing/

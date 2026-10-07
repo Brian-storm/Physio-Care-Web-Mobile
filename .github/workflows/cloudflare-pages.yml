@@ -1,4 +1,4 @@
-name: Deploy PhysioCare to Cloudflare Pages
+name: Deploy PhysioCare Worker
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: physiocare-pages-production
+  group: physiocare-worker-production
   cancel-in-progress: false
 
 jobs:
@@ -34,18 +34,20 @@ jobs:
           node-version: '22'
       - name: Install locked dependencies
         run: npm ci
+      - name: Test Pages gateway
+        run: npm run test:gateway
       - name: Build static demo
         run: npm run build:cloudflare
       - name: Check deployment credentials
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PHYSIOCARE_WORKER_API_TOKEN: ${{ secrets.PHYSIOCARE_WORKER_API_TOKEN }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo '::error::Add the CLOUDFLARE_API_TOKEN repository secret with Cloudflare Pages Edit permission.'
+          if [ -z "$PHYSIOCARE_WORKER_API_TOKEN" ]; then
+            echo '::error::Add the PHYSIOCARE_WORKER_API_TOKEN repository secret scoped ONLY to the physiocare-demo Worker with Editor permission.'
             exit 1
           fi
       - name: Deploy production
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.PHYSIOCARE_WORKER_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ec8010aae582c44feffb276276eda6ce
-        run: npx wrangler pages deploy out --project-name=physio-care --branch=main --commit-hash="$GITHUB_SHA"
+        run: npx wrangler deploy --config wrangler.worker.jsonc

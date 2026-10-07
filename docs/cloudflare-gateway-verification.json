@@ -1,0 +1,149 @@
+{
+  "url": "https://physio-care.pages.dev",
+  "worker": "https://physiocare-demo.1155234144.workers.dev",
+  "pagesProductionDeploymentUnchanged": "2af04134-c3d1-4ff6-be66-3af6f046b99a",
+  "workerVersionAfterGateway": "59b69b70-3068-421a-a39b-50c36071de10",
+  "deploymentMetadata": {
+    "commit": "01bf6d19146c1f69250362ad797aab372175d731",
+    "builtAt": "2026-10-07T06:16:44.709Z"
+  },
+  "buildIncludedUncommittedGatewayChanges": true,
+  "checks": [
+    {
+      "route": "/",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "c416cb4f22dc163b33d1878a7ed034c83124028c3b631e4257a8de24b3bba614",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/results/demo-session-001",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "f086d15ca0e07bcc818b36b7ca84e3b5c20cb627dd4017db0419ef64d733ccae",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/results/demo-session-002",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "c1db80c79088dbea59f5f1198d12f3e1a333afd076f66d6191e7093cb14c35a6",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/results/demo-session-003",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "361127e20e53adc3b592e6169ea174d9ae903fd6a4a8f584a01d84d903acfa27",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/results/demo-session-004",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "1d20b291ed812cfc42612b0f8da40bde0468f8741b35a1d66be5017c35408fbc",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/session/demo-session-001/live",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "5d8fd6eb10ba649da92fecc522d959b0cb4bc8ca1caa88566e967a240d7c6698",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/session/demo-session-002/live",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "0ec1f852d155adca4a8f2a4dee3323ca5ad0c4b4d457a6d86727a5476e926f9e",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/session/demo-session-003/live",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "10f44c678d3e28da569dd866c22c81405df6577b95fed8f420afb695a85ceaa8",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/session/demo-session-004/live",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "52909df4b03ac216e6f22acf156a5843f08b2dac2cc4027d38e30aaad3b3441c",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient/session/new",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "a106de7dbeeb42ae9aedce2851048854b7270c8fa0b73e29f655170812037cbf",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/patient",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "3c8e5ec80bf6770ad408a5f90220d81ed6ebe38ee3c1da7eb137b417d01bd943",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/therapist/patients/demo-patient-01/progress",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "d6abdb5901486a0ace867b71f2caa0dcbe0eda788cdfcbca31706f7c0fcf3a11",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/therapist/patients/demo-patient-01",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "d50ff33b41cbda3fa67029a0d72895a6e27855b66098a75add09fe76d8b1e1ad",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/therapist/patients",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "0293ba477eda4b384c6371a7ad3a1ea353814549128b9c5195536b98e8e4d6fe",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/wasm/vision_wasm_internal.js",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "e7fd9858e8e8f221d9b96eddc11f8e077f263e0b7bbd79d3cbe882b134274f8c",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/wasm/vision_wasm_internal.wasm",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "6a5c64584c2ab61c763b6e204afbdbc7ce1caf7f5216187322bca8df94f646bc",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/deployment.json",
+      "status": 200,
+      "bodyMatchesWorker": true,
+      "sha256": "9f1993bb551e19cd7b03b5d36d6802219d3386f978d131d1fb08b7b5500f368d",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/missing-page",
+      "status": 404,
+      "bodyMatchesWorker": true,
+      "sha256": "337aca6886d2764100f3900fd952b6e167967775cc15775a724b8cfb1e9cc84c",
+      "gateway": "worker-service-v1"
+    },
+    {
+      "route": "/api/v1/patients",
+      "status": 404,
+      "bodyMatchesWorker": true,
+      "sha256": "337aca6886d2764100f3900fd952b6e167967775cc15775a724b8cfb1e9cc84c",
+      "gateway": "worker-service-v1"
+    }
+  ],
+  "unitTestsPassed": 4,
+  "teammateInvitations": "deferred by user",
+  "ci": "pending scoped token and PR merge"
+}
