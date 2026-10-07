@@ -6,7 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "predev": "node scripts/prepare-pose-assets.mjs",
+    "prebuild": "node scripts/prepare-pose-assets.mjs",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "preview:cloudflare": "npm run build:cloudflare && wrangler dev --config wrangler.worker.jsonc",
+    "deploy:cloudflare": "npm run deploy:worker",
+    "deploy:worker": "npm run build:cloudflare && wrangler deploy --config wrangler.worker.jsonc",
+    "deploy:gateway": "cd gateway && wrangler pages deploy --project-name=physio-care --branch=main",
+    "test:gateway": "node --test gateway/tests/*.test.mjs",
+    "preview:gateway": "wrangler pages dev -c gateway/wrangler.toml -c wrangler.worker.jsonc"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.18",
@@ -25,6 +34,7 @@
     "eslint-config-next": "^14.2.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "wrangler": "4.148.0"
   }
 }

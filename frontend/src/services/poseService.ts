@@ -17,7 +17,7 @@ export async function initPoseDetector(): Promise<void> {
   );
 
   const vision = await FilesetResolver.forVisionTasks(
-    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
+    '/wasm'
   );
 
   poseLandmarker = await PoseLandmarker.createFromOptions(vision, {

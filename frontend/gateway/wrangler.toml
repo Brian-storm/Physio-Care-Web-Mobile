@@ -1,0 +1,8 @@
+# PhysioCare — Owner-managed fixed Pages entrypoint.
+name = "physio-care"
+compatibility_date = "2026-10-07"
+pages_build_output_dir = "./public"
+
+[[services]]
+binding = "PHYSIOCARE"
+service = "physiocare-demo"

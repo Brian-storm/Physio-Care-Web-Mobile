@@ -28,7 +28,7 @@ PhysioCare/
 - **Frontend**: Next.js 14, TypeScript (strict), TailwindCSS, Canvas 2D
 - **Pose Estimation**: @mediapipe/tasks-vision (100% on-device, WASM/WebGPU)
 - **Backend**: FastAPI, SQLModel, SQLite (dev) / Supabase PostgreSQL (prod)
-- **Infrastructure**: Docker Compose, Vercel (frontend), Render/Railway (backend)
+- **Infrastructure**: Cloudflare Pages gateway → PhysioCare Worker + static assets; Docker Compose for local development. FastAPI is not deployed.
 
 ## Code Conventions
 
@@ -92,3 +92,22 @@ cd backend && python -c "from app.main import app; print('OK')"
 ## UI Design Skill
 
 Use the OpenCode `frontend-design` skill at `.agents/skills/frontend-design/SKILL.md` for UI mockups, implementation, and visual review. Apply PhysioCare-specific rules from `.physiocare-agent/ai/skills/frontend-design.md` and reuse the existing tokens and components in `.physiocare-agent/ai/context/design-system.md`.
+
+## Deployment and privacy
+
+Read [docs/cloudflare-pages-deployment.md](docs/cloudflare-pages-deployment.md) before changing deployment configuration or publishing. It is the operational source of truth; older demo reports are historical evidence.
+
+- Public entrypoint: `https://physio-care.pages.dev`; routine releases update only the `physiocare-demo` Worker.
+- The Pages gateway is owner-managed. Never upload `frontend/out` directly to Pages, which would replace the gateway.
+- A successful build is not a successful deployment. Verify the gateway header, assets, expected 404s and `/deployment.json` after release.
+- Get account IDs, Cloudflare login emails and tokens privately. Do not commit real values, owner-specific hostnames, authentication logs, camera images or patient data.
+- Do not broaden a scoped Worker credential to account-wide access to work around an authorization error.
+- Team invitations and CI credentials are pending; do not report them as active without a real authorized deployment test.
+
+<!-- CODEGRAPH_START -->
+## CodeGraph
+
+If `.codegraph/` exists, use `codegraph explore "<symbol or file>"` (or the CodeGraph MCP with this repository's path) before grep/find or reading source to understand or locate code. Without an index, do not initialize one unless the user asks.
+
+Local setup and privacy: [docs/codegraph.md](docs/codegraph.md). Never commit or share `.codegraph/codegraph.db` or index exports.
+<!-- CODEGRAPH_END -->
