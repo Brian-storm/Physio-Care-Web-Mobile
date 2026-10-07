@@ -1,158 +1,98 @@
-# Cloudflare 部署指南：固定 Pages 網址＋團隊管理 Worker
+# Cloudflare 部署指南：專用 Account Worker＋固定 Pages 入口
 
-本文件是隊友及 AI agent 的部署操作入口。最後核對：2026-10-07（香港時間）。舊交接報告只作歷史證據；執行部署前，仍須查目前 Git、Cloudflare 版本及權限。
+隊友及 AI agent 的操作入口。更新：2026-10-07。執行前仍須核對 Git、線上版本及有效權限。歷史報告不是目前配置。
 
-## 1. 目前狀態與入口
+## 架構
 
-| 項目 | 設定／狀態 |
-| --- | --- |
-| 公開網站 | https://physio-care.pages.dev |
-| GitHub repo | https://github.com/Brian-storm/Physio-Care-Web-Mobile |
-| 部署分支 | `deploy/physiocare-clean`；請在 GitHub 查此分支的最新 PR／合併狀態 |
-| Pages 專案 | `physio-care`；只提供 gateway，由 owner 管理 |
-| App Worker | `physiocare-demo`；日常網站更新部署到這裡 |
-| 前端 | Next.js 14 static export，輸出 `frontend/out` |
-| 後端 | FastAPI 程式保留在 repo，但未部署、未接通前端 |
-| 資料 | 預載 synthetic fixtures；即時鏡頭數值不會寫入資料庫 |
-| 隊友 Cloudflare 邀請 | 等待私下提供及確認 Cloudflare 登入電郵 |
-| GitHub Actions | workflow 已寫好；尚待合併、設定 credentials 及首次 CI 驗證 |
+`https://physio-care.pages.dev` → owner 原 Account 的 Pages HTTPS gateway → 團隊專用 Account 的 `physiocare-demo` Worker → Next.js static export `ASSETS`。
 
-**現有公開網站可用，不代表隊友已取得權限或 CI 已啟用。** 截至上述日期，没有新增或分享部署 Token。
+- 日常 release 只更新新 Account Worker。Pages 不存 app snapshot；不可把 `frontend/out` 上傳到現有 Pages。
+- 舊入口由 owner 管理，CI 不取得舊 Account 的 credential。兩個 Account 不能沿用 Service Binding。
+- Gateway 只容許 GET/HEAD；轉送 path、query、Accept、Accept-Encoding、Range 及指定 cache validators，不轉送 Cookie／Authorization。HTTP 上游及任意用戶指定 origin 被拒絕。
+- 只允許 owner 私下設定的 HTTPS workers.dev origin；同上游 redirect 改為公開入口，外站 redirect 回 502。Fetch 不跟隨 redirect。
+- Binary body 串流傳遞，保留 status、cache、COOP/COEP；移除 Set-Cookie。上游錯誤回 503 no-store；其他 method 回 405。
+- 回應識別：`X-PhysioCare-Gateway: worker-http-v2`。舊 `worker-service-v1` 表示仍是歷史 gateway。
+- 舊 Account 仍負責入口可用性及 Pages Functions 用量；這不是完全搬離原帳戶。團隊可改公開入口顯示的內容，但不會因此取得 owner 管理 API credential。
 
-## 2. 架構與權限邊界
+## 狀態與未完成產品功能
 
-```mermaid
-flowchart LR
-    Browser[使用者瀏覽器] --> Pages[physio-care.pages.dev\nPages Function]
-    Pages -->|PHYSIOCARE service binding| Worker[physiocare-demo Worker]
-    Worker --> Assets[ASSETS\nHTML / CSS / JS / WASM]
-    GitHub[GitHub main] -. CI 尚待啟用 .-> Worker
-```
+- GitHub：`Brian-storm/Physio-Care-Web-Mobile`，正式分支 `main`。
+- 專用 Account 的 Worker 已建立，限定 Worker 的 Token 已通過手動部署驗證。
+- Repository Secrets 已設定；Token 到期日為 2027-01-06，需到期前更換並驗證 release。
+- 跨帳戶 gateway／首次 Actions 的最終結果見 [遷移驗證紀錄](cloudflare-account-migration.md)；未有完成紀錄前不可宣稱正式切換完成。
+- 先前成員邀請是在原 Account，不能當成已加入新 Account；本次部署不自動撤銷或轉移成員。
+- Demo 使用 synthetic fixtures。FastAPI、登入、資料庫及真實病人儲存尚未接通或部署。MediaPipe 在瀏覽器運作；模型仍由 Google 下載。
 
-- Pages 透過固定的 Service Binding 轉交全部 path、query、method 和 body；它不是重新導向，所以瀏覽器網址不變。
-- Pages 不存放 app 的靜態副本。Worker 更新後，固定網址會讀取新版；正常 release 不需重新部署 Pages。
-- App Worker 只有自己的 `ASSETS` binding，沒有其他專案的資料庫、服務、storage 或 secrets。
-- Gateway 不持有 Cloudflare 管理 API Token，也不接受使用者指定上游網址；它只呼叫固定的 `PHYSIOCARE` binding。
-- 上游錯誤會回傳不快取的 HTTP 503；正常回應的狀態碼、body、cache headers 與 COOP/COEP 會保留。
-- Pages Functions 請求會使用 Workers quota。GitHub 公開 repo 使用標準 Ubuntu runner 的運算免費，但不能把 Cloudflare gateway 流量當成純靜態免費請求。
-
-## 3. 必讀檔案與指令對照
-
-以下路徑均相對 repo root。
+## 檔案與憑證
 
 | 檔案 | 用途 |
 | --- | --- |
-| `frontend/wrangler.worker.jsonc` | App Worker 名稱、entrypoint、assets binding |
-| `frontend/worker/index.js` | 把 request 交给 `env.ASSETS.fetch` |
-| `frontend/gateway/wrangler.toml` | Owner 管理的 Pages 專案與 service binding |
-| `frontend/gateway/public/_worker.js` | Pages gateway，保留 upstream response |
-| `frontend/gateway/public/_routes.json` | 全部 path 經 gateway，沒有排除項 |
-| `frontend/gateway/tests/gateway.test.mjs` | HTTP forwarding、binary、HEAD/404、503 測試 |
-| `frontend/scripts/build-cloudflare.mjs` | Next static export；產生 `deployment.json` |
-| `frontend/scripts/prepare-pose-assets.mjs` | 從 lockfile 對應套件複製 MediaPipe WASM |
-| `frontend/public/_headers` | Worker assets 的隔離及基本 response headers |
-| `.github/workflows/cloudflare-pages.yml` | 名稱雖保留 pages，實際只部署 Worker |
-| `docs/cloudflare-gateway-verification.json` | 歷史線上驗證；不是最新部署狀態 |
+| `frontend/wrangler.worker.jsonc` | 新 Account 的 Worker、ASSETS 與 404 設定；沒有 Account ID |
+| `frontend/worker/index.js` | ASSETS request handler |
+| `frontend/gateway/wrangler.toml` | 舊 Account Pages gateway；不含 Service Binding |
+| `frontend/gateway/public/_worker.js` | 固定 HTTPS proxy |
+| `frontend/gateway/tests/gateway.test.mjs` | 轉接、隔離、redirect、錯誤及 method 測試 |
+| `frontend/scripts/build-cloudflare.mjs` | static export 及 `deployment.json` |
+| `frontend/public/_headers` | COOP/COEP 等 response headers |
+| `.github/workflows/cloudflare-pages.yml` | 名稱保留 pages，實際部署 Worker 並驗證公開 gateway commit |
 
-| 在 `frontend` 執行 | 效果 |
+| 私下提供的設定 | 儲存位置 |
 | --- | --- |
-| `npm run build:cloudflare` | 只建置，不部署 |
-| `npm run test:gateway` | 只跑 gateway tests |
-| `npm run preview:cloudflare` | 建置後本機預覽 Worker |
-| `npm run preview:gateway` | 本機同時啟動 gateway＋Worker；先建置 |
-| `npm run deploy:worker` | 建置並部署 App Worker；會影響公開網站 |
-| `npm run deploy:cloudflare` | 同 `deploy:worker` |
-| `npm run deploy:gateway` | 只部署 Pages gateway；owner 操作 |
+| 新 Account ID | GitHub Secret `CLOUDFLARE_ACCOUNT_ID`；手動部署用同名環境變數 |
+| 新 Account Worker Editor Token | GitHub Secret `PHYSIOCARE_WORKER_API_TOKEN`；手動部署映射為 `CLOUDFLARE_API_TOKEN` |
+| 新 Worker HTTPS origin | 舊 Pages production 和 preview 各自的 `PHYSIOCARE_ORIGIN` secret_text；僅為私隱用途，origin 不是密鑰 |
+| 舊 Account ID／owner credential | 只在 owner 本機處理 gateway；不存入此 repo 的 Actions |
 
-**不要把 `frontend/out` 直接部署到 Pages，否則會把 gateway 換成靜態 snapshot。不要為了部署本網站建立同名新 Worker、改其他專案、加全帳戶權限或修改網域。**
+不得混淆兩個 Account ID。CI Token 只允許專用 Account 的 `physiocare-demo` Individual Workers Editor，不含舊 Account、Pages、DNS、帳單及成員管理。不要以擴權修復 403。限定 Worker 權限不代表該 Account 所有其他 storage binding 都經過隔離驗證；專用 Account 不應混放私人專案。
 
-## 4. 本機準備與 credential 設定
+## GitHub Actions 日常更新
 
-使用 Node.js 22 和 npm。Wrangler 由 `frontend/package-lock.json` 鎖定；不必另裝全域版本。
+1. Feature branch → PR review → merge `main`。
+2. `frontend/**` 或 workflow 修改觸發部署；docs-only 不觸發。亦可手動 Run workflow 選 main。
+3. Node 22、`npm ci`、gateway tests、static build 通過後，Wrangler 使用新 Account Secrets 部署。
+4. Workflow 經公開 Pages URL 驗證 `/deployment.json` 的 commit 等於該次 `github.sha`，且 gateway 為 `worker-http-v2`。成功才代表公開入口同步；仍不是鏡頭實機驗收。
+
+標準 Ubuntu runner、`contents: read`、checkout 不持久保存 Git credential、15 分鐘 timeout、production 串行化。Secret 只注入 credential 檢查與部署步驟。可改 workflow 的人有機會使用或外傳 Secret，所以 repo write 權限仍須只給可信任者。公開 repo 不等於公眾能直接讀 Secret。
+
+Repository collaborator 可設定 repository Secrets；environment 保護及原生 GitHub App 授權是另外的管理權限問題。此 Actions 路線不依賴 Cloudflare GitHub App。
+
+## 手動 Worker release
+
+在 repo root 先核對 `git status --short`、目標 commit 及新 Account。使用 Node 22 和 lockfile；私下以環境注入憑證，不把 Token 放 command argument、log 或前端 public variables。
 
 ```sh
-# 在 repo root
 cd frontend
 npm ci
 npm run test:gateway
 npm run build:cloudflare
-```
-
-部署前，需要由 owner 私下提供／確認：
-
-| 名稱 | 在哪裡提供 | 說明 |
-| --- | --- | --- |
-| `CLOUDFLARE_ACCOUNT_ID` | 本機環境變數、GitHub repository Secret | 不是密鑰，但本專案選擇不在公開檔案刊登 |
-| `CLOUDFLARE_API_TOKEN` | 本機環境變數 | Wrangler 讀取的 credential，僅使用獲授權的 scoped Token |
-| `PHYSIOCARE_WORKER_API_TOKEN` | GitHub repository Secret | CI 專用；workflow 會映射為 Wrangler 的 `CLOUDFLARE_API_TOKEN` |
-| Cloudflare 登入電郵 | 私下交給 owner | 用來邀請成員，不放 GitHub issue、PR、docs 或 screenshots |
-
-取得憑證後，可透過 password manager 注入環境變數。若在 Bash／zsh 的私人終端輸入 Token，可使用隱藏輸入（不要在 AI 工具輸出中展示內容）：
-
-```sh
-export CLOUDFLARE_ACCOUNT_ID='<由 owner 私下提供的 account ID>'
-# 下一行會等待輸入 Token；貼上後按 Enter，不會顯示字元。
-read -r -s CLOUDFLARE_API_TOKEN
-export CLOUDFLARE_API_TOKEN
-```
-
-不要將真實 Token 寫成 command argument、`echo`、shell history 或 tracked `.env.example`。`.env.*`／`.dev.vars*` 在本 repo 被忽略，但仍應用 `git check-ignore` 確認，且避免將 credential 放入前端 `NEXT_PUBLIC_*` 變數。Node build 所讀取的 public variables 可以進入瀏覽器 bundle。
-
-`wrangler login` 是 owner 可用的互動式 OAuth 路徑，但官方指出它不支援 granular authorization。隊友不能以 owner 的 OAuth Token 代替 scoped Token。邀請本身也不保證 CLI 已有適合部署的 credential。
-
-## 5. 隊友授權（owner 操作，尚待完成）
-
-1. 私下收集每位隊友真正用於 Cloudflare 的電郵，不推測 GitHub email 就是 Cloudflare email，也不用 GitHub noreply 地址。
-2. 在 Cloudflare 成員／permission policy 設定選 **Individual Workers → physiocare-demo → Editor**。
-3. 檢查有效權限沒有其他帳戶、Developer Platform 全域角色、其他 Worker 或 Pages 管理範圍。
-4. 專用部署 Token 同樣只限定這個已存在的 Worker；如 UI／API 無法提供此 scope，停下請 owner 檢查，不以 account-wide token 取代。
-5. 在隊友帳戶及 scoped Token 下執行一次實際部署，確認網站可更新，且未取得其他專案管理權限。這項驗證目前未完成。
-
-成員邀請、Token 建立或發送須取得 owner 對實際收件人及權限的授權。不要自行猜測收件人，或把私人 credential 分享到公開 repo。角色名稱／介面可能變動，請以官方文件及當時 dashboard 為準。
-
-## 6. 日常手動 release（隊友）
-
-從已 review 的分支／commit 開始。先確定沒有不明 local modifications，再記下 rollback version：
-
-```sh
-# 在 repo root
-git status --short
-git rev-parse HEAD
-cd frontend
 npx wrangler deployments list --config wrangler.worker.jsonc
-npx wrangler versions list --config wrangler.worker.jsonc
-npm ci
-npm run test:gateway
-npm run build:cloudflare
 npx wrangler deploy --config wrangler.worker.jsonc --dry-run
-```
-
-核對輸出中的 Worker 名稱 `physiocare-demo`、只有 `ASSETS` binding、沒有非預期 secrets／bindings。所有檢查通過後才執行真正部署：
-
-```sh
+# 確認只有 ASSETS、指定新 Account 和正確 Worker 後
 npx wrangler deploy --config wrangler.worker.jsonc
 ```
 
-記下回傳的版本 UUID，完成第 8 節驗證。不要把 CLI 原始輸出直接貼入公開 repo：它可能包含 owner-specific 網址、帳戶名稱或 email。
+`deployment.json` 記錄 HEAD 與 UTC build 時間，不記 dirty flag；必須從乾淨、已 review 的程式建置。保存良好 Worker version UUID 作 rollback。
 
-`out/deployment.json` 的 `commit` 是建置時的 HEAD，`builtAt` 是 UTC 時間。它目前不包含 dirty flag；因此 dirty working tree 的建置不能單靠此檔宣稱與 commit 完全一致。Release 應從乾淨且已 review 的 commit 建置。
+## Gateway 維護（owner）
 
-## 7. GitHub Actions 啟用與團隊流程
+僅 gateway 程式／origin 變動時需要執行；日常隊友 release 不部署 Pages。
 
-以下條件全部達成才算啟用：
+1. 私下確認舊 Account 的 Pages production 和 preview 都設定正確 `PHYSIOCARE_ORIGIN`。不可使用舊 Worker origin，也不可回指 Pages 自己。
+2. 保留良好 Pages production ID、配置及舊 Worker 作回滾；新 gateway 無需任何 service binding。
+3. 測試後從 `frontend/gateway` 發 preview，再驗證、部署 main：
 
-- 本部署 PR／其後部署修訂已 review 並合併到 `main`。
-- GitHub repository Actions Secrets 已設定 `PHYSIOCARE_WORKER_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`，值由 owner 私下提供。
-- 專用 Token 的 Worker scope 已驗證；不使用 account-wide Pages Token。
-- GitHub Actions 可以執行，且第一次真實 workflow＋網站驗證成功。
+```sh
+# frontend，使用 owner 的舊 Account 環境
+npm run test:gateway
+cd gateway
+../node_modules/.bin/wrangler pages deploy --project-name=physio-care --branch=gateway-preview
+# 完成 preview 的 HTTP/browser 檢查後
+../node_modules/.bin/wrangler pages deploy --project-name=physio-care --branch=main
+```
 
-日常流程：feature branch → PR review → merge main → 自動 build／test／部署 Worker → 檢查 run 及網站。觸發條件是 `main` 的 `frontend/**` 或 workflow 檔案變動；只有 docs 變動不會部署。也可在 Actions 手動 Run workflow，分支選 `main`。其他分支及 pull request event 不會發布正式站。
+Pages CLI 從 canonical `wrangler.toml` 讀設定，不傳 custom config path。Local preview 用 gateway 目錄的 ignored `.dev.vars` 提供 `PHYSIOCARE_ORIGIN` 再執行 `npm run preview:gateway`；這會讀取遠端公開 Worker，不是同帳戶本機 Service Binding 模擬。
 
-Workflow 使用標準 `ubuntu-latest`、Node 22、`npm ci`，先 gateway tests 再 static build；credential 只在檢查／部署步驟注入。GitHub 權限為 `contents: read`，最多執行 15 分鐘，production deployments 串行化。未保存大型 artifact/cache。
-
-即使 Secret 不可直接讀出，有能力更改 workflow 的人仍可能使用它。因此 scope 必須限於 PhysioCare Worker，並只給可信任隊友 repository write 權限。不要用更寬 scope 解決 403。
-
-## 8. 部署後驗證
+## 部署驗證與回滾
 
 ```sh
 curl -fsSI https://physio-care.pages.dev/
@@ -162,77 +102,23 @@ curl -fsS https://physio-care.pages.dev/deployment.json
 curl -sS -o /dev/null -w '%{http_code}\n' https://physio-care.pages.dev/missing-page
 ```
 
-期望：正常頁面 HTTP 200；WASM `Content-Type: application/wasm`；有 `X-PhysioCare-Gateway: worker-service-v1`、COOP `same-origin`、COEP `require-corp`；不存在的 path 為 404。`deployment.json` 應與本次 `out/deployment.json` 相同。公開 GET／HEAD 檢查不需要 Token，請勿傳 Authorization header。
+期望正常頁面 200、WASM MIME 正確、缺頁 404、gateway header v2、COOP same-origin、COEP require-corp，release commit 正確。檢查首頁→患者→結果及治療師；沒有 asset/hydration error，網址留在 Pages。相機、模型初始化及真人動作需實機另驗，不以 HTTP 成功替代。
 
-再用瀏覽器測試首頁 → 患者 → 結果及治療師頁，確認 URL 一直是 `physio-care.pages.dev`，沒有 asset／hydration error。鏡頭及 MediaPipe 還需要真實裝置授權、模型下載和真人動作測試；單純 HTTP 200 不代表動作分析準確。
+- Worker 問題：在新 Account 用 `wrangler rollback <已核實版本UUID> --config wrangler.worker.jsonc`，然後驗證入口。
+- Gateway 問題：owner 回復已知良好 Pages production。若回復舊 v1，須核對該部署 `PHYSIOCARE` binding 和舊 Worker 仍存在；v1 不會隨新 Account 更新。
+- CI 成功部署但公開驗證失敗：先比較新 Worker／Pages 的 deployment.json 及 gateway header，檢查 origin；不要盲目重跑或擴權。
+- 503：檢查 origin、上游可用性。502：檢查非預期 redirect。405：目前只支援 static reads；新增 API／登入需另作設計。
 
-若要證明只更新 Worker 即生效，由 owner 在更新前後記錄 Pages production deployment ID，應保持不變，而 `/deployment.json` 反映本次 build。過往已做過這項測試，但每次 release 仍需檢查當時狀態。
+## 私隱及歷史
 
-## 9. Gateway 修改與回滾（owner）
+公開文件可保留 Pages URL、repo、Worker 名稱、sanitized 驗證及版本 UUID。團隊 Google Doc 連結經 owner 同意保留。不要提交 Account ID、登入電郵、owner-specific hostname、API/OAuth Token、未清理 CLI/dashboard logs、相機或病人資料。所有帳戶 metadata 私下管理；不把 Token 放入 `NEXT_PUBLIC_*`。
 
-只有 gateway 程式、binding 或路由設定變動時才需要重部署 Pages。先測試，先發 preview，再測正式：
+`.codegraph` DB 只在本機使用，見 [CodeGraph 指南](codegraph.md)。舊分支刪除不保證 GitHub PR refs／舊 commit 消失；不得宣稱已抹除歷史。
 
-```sh
-# frontend，已載入 owner 自己的授權環境；不要交給隊友 account-wide Pages credential
-npm run test:gateway
-npm run build:cloudflare
-npm run preview:gateway
-# 停止本機 preview 後，另在 frontend/gateway 執行
-cd gateway
-../node_modules/.bin/wrangler pages deploy --project-name physio-care --branch gateway-preview
-# 從工具回傳的 preview URL 完成 HTTP／browser 驗證後
-cd ..
-npm run deploy:gateway
-```
+## 官方參考
 
-Pages deploy 必須從 gateway 目錄載入其 canonical `wrangler.toml`。不要把 custom `--config gateway/wrangler.toml` 路徑傳給 `pages deploy`：所測版本不支援。Local combined dev 則使用兩個明確 `-c`，`preview:gateway` 已處理。
-
-### Worker 回滾
-
-從部署前記錄的已知良好 UUID 選擇，避免回到不支援 gateway 的版本：
-
-```sh
-# frontend
-npx wrangler versions list --config wrangler.worker.jsonc
-npx wrangler rollback <已核實的良好版本UUID> --config wrangler.worker.jsonc
-```
-
-回滾後再做第 8 節驗證。不要假設「上一個版本」必然是要回復的版本。
-
-### Pages 回滾
-
-Owner 在 Cloudflare Pages → physio-care → Deployments 選已知良好的 production deployment 回滾。過往靜態站版本 `c80127d7-7215-4ee8-862f-f2287703a803` 可作緊急參考，但須先確認仍存在；回復它會停用 gateway，網站不再隨 Worker 更新。優先回復良好的 gateway deployment，並核對 service binding。
-
-## 10. 常見問題
-
-| 症狀 | 先檢查 |
-| --- | --- |
-| 403／authentication error | Token 有效期、private Account ID、指定 Worker scope；不要擴權硬試 |
-| Gateway HTTP 503 | PHYSIOCARE binding 是否存在、Worker 是否可用；owner 檢查 Pages config／logs |
-| 頁面可開但沒有 gateway header | 是否誤把 app 直接部署到 Pages，或正在看舊 deployment |
-| WASM 404／初始化失敗 | build 是否複製 installed package 的 WASM，COOP/COEP 是否完整；Google model download 是否成功 |
-| CI 沒有啟動 | PR 是否已合併、分支是否 main、是否只有 docs 變動、Actions 是否啟用 |
-| CI credential check 失敗 | 兩個 repository Secret 是否設定；不要把值貼到 log／issue |
-| CLI 使用者權限不足 | 邀請是否接受、是否真的登入正確帳戶、是否使用支援 granular authorization 的 Token |
-| 新患者／session URL 404 | Demo 只 export fixtures 的 ID；這不代表後端壞了 |
-| Worker 更新後頁面仍舊 | 比對 deployment.json、Pages production ID、gateway header，再檢查瀏覽器 cache |
-
-此原型沒有登入、真正病人儲存或後端 health API；`/api/v1/patients` 404 是目前預期。不要以文件為由額外部署 FastAPI／D1／Supabase。
-
-## 11. 公開 repo 的私隱規則
-
-公開可保留：公共 Pages 網址、repo／PR 連結、Worker/Pages/service binding 名稱、版本 UUID、sanitized HTTP 狀態與 hash。團隊 Google Doc 連結經 owner 同意保留，其實際存取仍受 Google 分享設定控制。
-
-不要刊登：學號／個人帳戶 hostname、Cloudflare Account ID、登入電郵、API/OAuth Tokens、私人 `.env`、授權 headers、未清理的 dashboard/CLI logs、真實病人資料或鏡頭畫面。Account ID 本身不是 credential，本專案仍把它當 private operational metadata 管理。
-
-CodeGraph DB 只在本機產生，見 [CodeGraph 指南](codegraph.md)。只提交 `.codegraph/.gitignore`，不提交資料庫／daemon／logs／exports。
-
-本次清理只改目前檔案，不改寫 Git 歷史。先前提交可能仍含被移除的個人 metadata；如要移除歷史／PR 記錄，須另外取得 owner 與 repo 維護者同意。這不等於 Token 外洩，亦沒有更改雲端網址或關閉服務。
-
-## 12. 官方參考
-
-- [Pages Service bindings](https://developers.cloudflare.com/pages/functions/bindings/#service-bindings)
-- [Worker granular roles／Pages 與 Worker 權限差異](https://developers.cloudflare.com/workers/authorization/workers/)
-- [Wrangler Worker commands](https://developers.cloudflare.com/workers/wrangler/commands/workers/)
-- [Pages Functions 計費](https://developers.cloudflare.com/pages/functions/pricing/)
-- [GitHub Actions 計費](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
+- [Workers 權限及 bindings 限制](https://developers.cloudflare.com/workers/authorization/workers/)
+- [Service Binding 同帳戶限制](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/)
+- [Pages secrets](https://developers.cloudflare.com/pages/functions/bindings/#secrets)
+- [GitHub repository Secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets)
+- [Pages rollback](https://developers.cloudflare.com/pages/configuration/rollbacks/)

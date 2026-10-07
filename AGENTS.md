@@ -28,7 +28,7 @@ PhysioCare/
 - **Frontend**: Next.js 14, TypeScript (strict), TailwindCSS, Canvas 2D
 - **Pose Estimation**: @mediapipe/tasks-vision (100% on-device, WASM/WebGPU)
 - **Backend**: FastAPI, SQLModel, SQLite (dev) / Supabase PostgreSQL (prod)
-- **Infrastructure**: Cloudflare Pages gateway → PhysioCare Worker + static assets; Docker Compose for local development. FastAPI is not deployed.
+- **Infrastructure**: Cloudflare Pages HTTPS gateway → dedicated-account PhysioCare Worker + static assets; Docker Compose for local development. FastAPI is not deployed.
 
 ## Code Conventions
 
@@ -102,7 +102,7 @@ Read [docs/cloudflare-pages-deployment.md](docs/cloudflare-pages-deployment.md) 
 - A successful build is not a successful deployment. Verify the gateway header, assets, expected 404s and `/deployment.json` after release.
 - Get account IDs, Cloudflare login emails and tokens privately. Do not commit real values, owner-specific hostnames, authentication logs, camera images or patient data.
 - Do not broaden a scoped Worker credential to account-wide access to work around an authorization error.
-- Team invitations and CI credentials are pending; do not report them as active without a real authorized deployment test.
+- CI credentials target only the dedicated account. Check the deployment runbook and migration record for activation evidence; original-account member invitations do not transfer automatically.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
