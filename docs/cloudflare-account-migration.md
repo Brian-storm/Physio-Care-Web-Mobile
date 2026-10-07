@@ -14,7 +14,7 @@
 - 7 項 gateway tests、Next build/lint/types 通過；8 個路由／WASM／manifest／404 與新 Worker 的 body hash 一致；另驗 HEAD、POST 405 及同站 redirect。CI 後再次核對公開 manifest 為上述 release commit。
 - 瀏覽器 preview 患者→結果、production 治療師→進度導覽成功，未見 console errors。本次沒有重新做實體鏡頭驗收。
 - 已核對本次公開 Actions logs 沒有私下管理的 Account IDs 或 owner-specific hostnames。
-- 原 Account 的隊友權限未在本次遷移自動撤銷；專用 Account 成員需另行管理。
+- 2026-10-07：已向兩位隊友發送專用 Account 邀請，均僅授予 `physiocare-demo` 的 Individual Workers Editor；最後檢查為 Pending，仍需隊友接受。兩位在原 Account 的 Active 成員資格已移除，原 Account 成員清單只剩 owner。私人電郵不寫入公開文件。
 
 ## 初始準備方案（歷史）
 現行操作見 [部署指南](cloudflare-pages-deployment.md)。

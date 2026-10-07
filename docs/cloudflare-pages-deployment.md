@@ -20,7 +20,7 @@
 - 專用 Account 的 Worker 已建立，限定 Worker 的 Token 已通過手動部署驗證。
 - Repository Secrets 已設定；Token 到期日為 2027-01-06，需到期前更換並驗證 release。
 - 跨帳戶 gateway 及首次 Actions 已於 2026-10-07 驗證成功；版本與 run 連結見 [遷移驗證紀錄](cloudflare-account-migration.md)。後續 docs-only commit 不部署，因此網站 manifest 不一定等於 main 最新文件 commit。
-- 先前成員邀請是在原 Account，不能當成已加入新 Account；本次部署不自動撤銷或轉移成員。
+- 兩位隊友已獲邀加入專用 Account，僅限 `physiocare-demo` Editor；最後檢查為 Pending。原 Account 的兩位成員資格已移除。接受新邀請後才能使用新帳戶管理介面；GitHub Actions 不依賴邀請接受。
 - Demo 使用 synthetic fixtures。FastAPI、登入、資料庫及真實病人儲存尚未接通或部署。MediaPipe 在瀏覽器運作；模型仍由 Google 下載。
 
 ## 檔案與憑證
