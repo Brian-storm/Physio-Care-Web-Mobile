@@ -2,6 +2,8 @@
 
 import { LiveExerciseAnalysis } from '@/components/session/LiveExerciseAnalysis';
 
+import { DEMO_SESSIONS } from '@/data/phase1DemoData';
+
 export interface LiveSessionPageProps {
   params: { sessionId: string };
 }
@@ -14,4 +16,9 @@ export interface LiveSessionPageProps {
  */
 export default function LiveSessionPage({ params }: LiveSessionPageProps): React.JSX.Element {
   return <LiveExerciseAnalysis sessionId={params.sessionId} />;
+}
+
+/** Enumerate synthetic demo routes for Cloudflare static export. */
+export function generateStaticParams(): { sessionId: string }[] {
+  return DEMO_SESSIONS.map(({ id }) => ({ sessionId: id }));
 }

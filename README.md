@@ -1,5 +1,11 @@
 # PhysioCare
 
+**Live demo:** https://physio-care.pages.dev
+
+**Team deployment:** [Cloudflare deployment runbook — fixed Pages URL + scoped Worker](docs/cloudflare-pages-deployment.md). The demo uses synthetic patient data; live measurements are not saved.
+
+**AI agents / code navigation:** [Local CodeGraph setup](docs/codegraph.md).
+
 > *A digital goniometer and clinical force multiplier — extending the therapist's reach into the patient's living room.*
 
 PhysioCare is an AI-powered physiotherapy rehabilitation platform that uses **real-time computer vision** to analyze exercise form, track recovery progress, and connect patients with their physical therapists — all through a web browser.

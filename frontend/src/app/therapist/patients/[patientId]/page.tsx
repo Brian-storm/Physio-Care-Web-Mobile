@@ -68,3 +68,8 @@ export default function TherapistPatientPage({ params }: TherapistPatientPagePro
     </Phase1PortalShell>
   );
 }
+
+/** Enumerate synthetic demo routes for Cloudflare static export. */
+export function generateStaticParams(): { patientId: string }[] {
+  return [{ patientId: DEMO_PATIENT.id }];
+}

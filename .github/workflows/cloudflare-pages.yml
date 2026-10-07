@@ -1,0 +1,79 @@
+name: Deploy PhysioCare Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/cloudflare-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: physiocare-worker-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Test Pages gateway
+        run: npm run test:gateway
+      - name: Build static demo
+        run: npm run build:cloudflare
+      - name: Check deployment credentials
+        env:
+          PHYSIOCARE_WORKER_API_TOKEN: ${{ secrets.PHYSIOCARE_WORKER_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$PHYSIOCARE_WORKER_API_TOKEN" ]; then
+            echo '::error::Add the PHYSIOCARE_WORKER_API_TOKEN repository secret scoped ONLY to the physiocare-demo Worker with Editor permission.'
+            exit 1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo '::error::Add the owner-provided CLOUDFLARE_ACCOUNT_ID repository secret.'
+            exit 1
+          fi
+      - name: Deploy production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.PHYSIOCARE_WORKER_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Keep the owner-specific Worker hostname out of public Actions logs.
+          set -o pipefail
+          npx wrangler deploy --config wrangler.worker.jsonc 2>&1 \
+            | sed -E 's#https://[A-Za-z0-9.-]+\.workers\.dev#[Worker URL redacted]#g'
+      - name: Verify public gateway release
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 15 \
+              -D /tmp/physiocare-headers -o /tmp/physiocare-release.json \
+              "https://physio-care.pages.dev/deployment.json?release=$EXPECTED_COMMIT" \
+              && jq -e --arg commit "$EXPECTED_COMMIT" '.commit == $commit' /tmp/physiocare-release.json >/dev/null \
+              && grep -qi '^x-physiocare-gateway: worker-http-v2' /tmp/physiocare-headers; then
+              echo "Public gateway serves the expected commit."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo '::error::Public gateway did not serve the expected release; inspect deployment and gateway before retrying.'
+          exit 1

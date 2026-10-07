@@ -71,3 +71,8 @@ export default function PatientResultPage({ params }: PatientResultPageProps): R
     </Phase1PortalShell>
   );
 }
+
+/** Enumerate synthetic demo routes for Cloudflare static export. */
+export function generateStaticParams(): { sessionId: string }[] {
+  return DEMO_SESSIONS.map(({ id }) => ({ sessionId: id }));
+}

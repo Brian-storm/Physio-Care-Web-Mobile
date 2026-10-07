@@ -1,0 +1,7 @@
+# PhysioCare — Owner-managed cross-account HTTPS entrypoint.
+name = "physio-care"
+compatibility_date = "2026-10-07"
+pages_build_output_dir = "./public"
+
+# Set PHYSIOCARE_ORIGIN privately in BOTH production and preview Pages settings.
+# No service bindings or management API credentials belong in this gateway.

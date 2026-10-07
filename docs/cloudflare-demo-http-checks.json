@@ -1,0 +1,132 @@
+{
+  "url": "[REDACTED: owner-specific workers.dev hostname]",
+  "checks": [
+    {
+      "route": "/",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/results/demo-session-001",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/results/demo-session-002",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/results/demo-session-003",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/results/demo-session-004",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/session/demo-session-001/live",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/session/demo-session-002/live",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/session/demo-session-003/live",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/session/demo-session-004/live",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient/session/new",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/patient",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/therapist/patients/demo-patient-01/progress",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/therapist/patients/demo-patient-01",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/therapist/patients",
+      "status": 200,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/wasm/vision_wasm_internal.js",
+      "status": 200,
+      "type": "text/javascript",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/wasm/vision_wasm_internal.wasm",
+      "status": 200,
+      "type": "application/wasm",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/missing-page",
+      "status": 404,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    {
+      "route": "/api/v1/patients",
+      "status": 404,
+      "type": "text/html",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    }
+  ],
+  "privacyNote": "Owner-specific hostname redacted from public evidence; original status/hash observations are unchanged."
+}
