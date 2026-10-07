@@ -1,5 +1,5 @@
 {
-  "url": "https://physiocare-demo.1155234144.workers.dev",
+  "url": "[REDACTED: owner-specific workers.dev hostname]",
   "checks": [
     {
       "route": "/",
@@ -127,5 +127,6 @@
       "coop": "same-origin",
       "coep": "require-corp"
     }
-  ]
+  ],
+  "privacyNote": "Owner-specific hostname redacted from public evidence; original status/hash observations are unchanged."
 }

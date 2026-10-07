@@ -21,3 +21,9 @@ frontend/out/
 frontend/public/wasm/
 .wrangler/
 .dev.vars*
+
+# Private deployment settings and local CodeGraph index
+.env.*
+!.env.example
+!.env.*.example
+codegraph-export*.json

@@ -1,6 +1,6 @@
 {
   "url": "https://physio-care.pages.dev",
-  "worker": "https://physiocare-demo.1155234144.workers.dev",
+  "worker": "[REDACTED: owner-specific workers.dev hostname]",
   "pagesProductionDeploymentUnchanged": "2af04134-c3d1-4ff6-be66-3af6f046b99a",
   "workerVersionAfterGateway": "59b69b70-3068-421a-a39b-50c36071de10",
   "deploymentMetadata": {
@@ -145,5 +145,6 @@
   ],
   "unitTestsPassed": 4,
   "teammateInvitations": "deferred by user",
-  "ci": "pending scoped token and PR merge"
+  "ci": "pending scoped token and PR merge",
+  "privacyNote": "Owner-specific hostname redacted from public evidence; original status/hash observations are unchanged."
 }
