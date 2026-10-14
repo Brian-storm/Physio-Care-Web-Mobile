@@ -279,11 +279,16 @@ export class SquatEngine {
     this.formScore = Math.max(0, 100 - deductions);
 
     let risk = 0;
-    if (measurements.valgus > 0.18) risk += 40;
-    if (measurements.torso > 50) risk += 30;
-    if (measurements.knee < 60) risk += 20;
+
+    if (measurements.torso > 40) risk += 50;
+    else if (measurements.torso > 30) risk += 20;
+
+    if (measurements.knee < 60) risk += 50;
+    else if (measurements.knee < 90) risk += 15;
+
     this.dangerScore = Math.min(100, risk);
-    this.isFlagged = this.dangerScore > 75;
+
+    this.isFlagged = this.dangerScore >= 50;
 
     const angles: JointAngle[] = [
       {

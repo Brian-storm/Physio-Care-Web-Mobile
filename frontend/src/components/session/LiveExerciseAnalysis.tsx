@@ -100,6 +100,30 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
   // it in a ref preserves that internal state without triggering React renders.
   const engineRef = useRef(new SquatEngine());
 
+  const lastSpokenRef = useRef<{ message: string; time: number } | null>(null);
+  const SPEAK_COOLDOWN_MS = 6000; // 3 秒內同一句話不重複
+
+  const speak = useCallback((message: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const now = Date.now();
+    if (
+      lastSpokenRef.current &&
+      lastSpokenRef.current.message === message &&
+      now - lastSpokenRef.current.time < SPEAK_COOLDOWN_MS
+    ) {
+      return;
+    }
+    if (window.speechSynthesis.speaking) {
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'zh-HK';
+    utterance.rate = 1.25;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+    lastSpokenRef.current = { message, time: now };
+  }, []);
+
   // Show a neutral panel until the first confident pose is analyzed. Placeholder
   // values are not sent through the geometry or repetition calculations.
   const [exerciseState, setExerciseState] = useState<ExerciseState>(
@@ -276,6 +300,18 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
       const state = engineRef.current.update(landmarkSet, aspectRatio);
       setExerciseState(state);
       drawSkeleton(result.landmarks, video, canvas, state);
+      if (state.isFlagged) {
+        const torso = state.angles[2].value; // Torso Lean
+        const knee = state.angles[0].value;  // Knee Flexion
+
+        if (torso > 40) {
+          speak('軀幹前傾過大，請保持背部直立');
+        } else if (knee < 60) {
+          speak('蹲得太深，請減小幅度');
+        } else {
+          speak('動作需要留意，請放慢速度');
+        }
+      }
     }
 
     // Schedule the next camera-frame analysis. A missing pose on this frame
