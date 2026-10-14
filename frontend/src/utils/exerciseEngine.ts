@@ -4,7 +4,6 @@ import type { ExercisePhase, ExerciseState, JointAngle } from '@/types/pose';
 import {
   calculateHipAngle,
   calculateKneeAngle,
-  calculateKneeValgus,
   calculateTorsoAngle,
 } from './angles';
 
@@ -29,12 +28,6 @@ interface LandmarkSet {
   rightAnkle: RawLandmark;
 }
 
-/** Weighted candidate measurement from one visible body side. */
-interface Measurement {
-  value: number;
-  confidence: number;
-}
-
 /** Smoothed angles used to reduce frame-to-frame pose jitter. */
 interface SmoothedAngles {
   knee: number;
@@ -53,9 +46,10 @@ export const SQUAT_BOTTOM_ANGLE_THRESHOLD = 110;
  * Analyze squat landmarks one camera frame at a time.
  *
  * The engine corrects normalized x coordinates for the video aspect ratio,
- * calculates left and right joint angles independently, combines measurements
- * using MediaPipe visibility, and smooths those measurements before evaluating
- * rep phases. Its scores remain heuristic estimates from a single camera view.
+ * calculates each side's joint angles independently, and then uses only the
+ * side with higher visibility for the current frame. This avoids mixing noisy
+ * measurements from an occluded leg into the state machine, while still
+ * supporting either left-side or right-side camera views.
  */
 export class SquatEngine {
   /** Current phase in the repetition state machine. */
@@ -92,7 +86,6 @@ export class SquatEngine {
 
   /**
    * Return a neutral UI snapshot before a usable camera pose is available.
-   * This does not feed placeholder coordinates through the angle or phase math.
    */
   getInitialState(): ExerciseState {
     const angles: JointAngle[] = [
@@ -124,8 +117,6 @@ export class SquatEngine {
 
   /**
    * Convert normalized image coordinates to a square-pixel-equivalent plane.
-   * Scaling x by width/height fixes the angle distortion caused by treating
-   * normalized x and y as though they represented equal pixel distances.
    */
   private toMetricPoint(point: RawLandmark, aspectRatio: number): RawLandmark {
     return { ...point, x: point.x * aspectRatio };
@@ -137,21 +128,6 @@ export class SquatEngine {
       const visibility = point.visibility ?? 1;
       return Math.max(0, Math.min(1, visibility));
     }));
-  }
-
-  /** Average usable side measurements, weighting more-visible sides more. */
-  private weightedAverage(measurements: Measurement[]): number | null {
-    const usable = measurements.filter(
-      ({ value, confidence }) => Number.isFinite(value) && confidence >= this.MIN_VISIBILITY
-    );
-    const totalConfidence = usable.reduce((sum, item) => sum + item.confidence, 0);
-
-    if (totalConfidence === 0) return null;
-
-    return usable.reduce(
-      (sum, item) => sum + item.value * item.confidence,
-      0
-    ) / totalConfidence;
   }
 
   /** Apply an exponential moving average to one angle or alignment value. */
@@ -219,6 +195,7 @@ export class SquatEngine {
 
   /**
    * Analyze one pose frame and return the state used by the live panel.
+   * Only the more visible side is tracked each frame; sides are never averaged.
    *
    * @param landmarks - Bilateral shoulder, hip, knee, and ankle points.
    * @param aspectRatio - Video width divided by video height; defaults to 1.
@@ -230,8 +207,6 @@ export class SquatEngine {
       : 1;
     const point = (landmark: RawLandmark) => this.toMetricPoint(landmark, safeAspectRatio);
 
-    // Transform each side independently; do not create artificial joints by
-    // averaging left/right knees or ankles before calculating their angles.
     const leftShoulder = point(landmarks.leftShoulder);
     const rightShoulder = point(landmarks.rightShoulder);
     const leftHip = point(landmarks.leftHip);
@@ -241,69 +216,52 @@ export class SquatEngine {
     const leftAnkle = point(landmarks.leftAnkle);
     const rightAnkle = point(landmarks.rightAnkle);
 
+    // Evaluate both sides' knee confidence, then pick the more visible side.
     const leftKneeConfidence = this.confidence(leftHip, leftKnee, leftAnkle);
     const rightKneeConfidence = this.confidence(rightHip, rightKnee, rightAnkle);
-    const kneeAngle = this.weightedAverage([
-      {
-        value: calculateKneeAngle(leftHip, leftKnee, leftAnkle),
-        confidence: leftKneeConfidence,
-      },
-      {
-        value: calculateKneeAngle(rightHip, rightKnee, rightAnkle),
-        confidence: rightKneeConfidence,
-      },
-    ]);
 
-    // Ignore low-confidence frames rather than moving the state machine using
-    // guessed or occluded joint locations. A gap also breaks debounce streaks.
-    if (kneeAngle === null) {
+    const useLeft = leftKneeConfidence >= rightKneeConfidence;
+    const chosenKneeConfidence = useLeft ? leftKneeConfidence : rightKneeConfidence;
+
+    // If neither side is visible enough, hold the last valid state.
+    if (chosenKneeConfidence < this.MIN_VISIBILITY) {
       this.candidatePhase = null;
       this.candidateFrameCount = 0;
       return this.lastState ?? this.getInitialState();
     }
 
-    const leftHipConfidence = this.confidence(leftShoulder, leftHip, leftKnee);
-    const rightHipConfidence = this.confidence(rightShoulder, rightHip, rightKnee);
-    const rawHipAngle = this.weightedAverage([
-      {
-        value: calculateHipAngle(leftShoulder, leftHip, leftKnee),
-        confidence: leftHipConfidence,
-      },
-      {
-        value: calculateHipAngle(rightShoulder, rightHip, rightKnee),
-        confidence: rightHipConfidence,
-      },
-    ]);
+    // Compute all angles using only the chosen side's landmarks.
+    let kneeAngle: number;
+    let hipAngle: number | null;
+    let torsoAngle: number | null;
 
-    const leftTorsoConfidence = this.confidence(leftShoulder, leftHip);
-    const rightTorsoConfidence = this.confidence(rightShoulder, rightHip);
-    const rawTorsoAngle = this.weightedAverage([
-      {
-        value: calculateTorsoAngle(leftShoulder, leftHip),
-        confidence: leftTorsoConfidence,
-      },
-      {
-        value: calculateTorsoAngle(rightShoulder, rightHip),
-        confidence: rightTorsoConfidence,
-      },
-    ]);
+    if (useLeft) {
+      kneeAngle = calculateKneeAngle(leftHip, leftKnee, leftAnkle);
+      hipAngle = this.confidence(leftShoulder, leftHip, leftKnee) >= this.MIN_VISIBILITY
+        ? calculateHipAngle(leftShoulder, leftHip, leftKnee)
+        : null;
+      torsoAngle = this.confidence(leftShoulder, leftHip) >= this.MIN_VISIBILITY
+        ? calculateTorsoAngle(leftShoulder, leftHip)
+        : null;
+    } else {
+      kneeAngle = calculateKneeAngle(rightHip, rightKnee, rightAnkle);
+      hipAngle = this.confidence(rightShoulder, rightHip, rightKnee) >= this.MIN_VISIBILITY
+        ? calculateHipAngle(rightShoulder, rightHip, rightKnee)
+        : null;
+      torsoAngle = this.confidence(rightShoulder, rightHip) >= this.MIN_VISIBILITY
+        ? calculateTorsoAngle(rightShoulder, rightHip)
+        : null;
+    }
 
-    const bodyCenterX = (leftHip.x + rightHip.x) / 2;
-    const rawValgus = Math.max(
-      leftKneeConfidence >= this.MIN_VISIBILITY
-        ? calculateKneeValgus(leftHip, leftKnee, leftAnkle, bodyCenterX)
-        : 0,
-      rightKneeConfidence >= this.MIN_VISIBILITY
-        ? calculateKneeValgus(rightHip, rightKnee, rightAnkle, bodyCenterX)
-        : 0
-    );
+    // Side-on view cannot reliably detect knee valgus; skip it in this MVP.
+    const rawValgus = 0;
 
-    // Visibility-weighted estimates are smoothed so one noisy detection is less
-    // likely to create a sudden angle jump or phase change.
+    // Smooth the chosen-side measurements so a single noisy frame does not
+    // cause a sudden angle jump or spurious phase transition.
     const smoothed: SmoothedAngles = {
       knee: this.smooth(kneeAngle, this.smoothedAngles?.knee),
-      hip: this.smooth(rawHipAngle ?? this.smoothedAngles?.hip ?? kneeAngle, this.smoothedAngles?.hip),
-      torso: this.smooth(rawTorsoAngle ?? this.smoothedAngles?.torso ?? 0, this.smoothedAngles?.torso),
+      hip: this.smooth(hipAngle ?? this.smoothedAngles?.hip ?? kneeAngle, this.smoothedAngles?.hip),
+      torso: this.smooth(torsoAngle ?? this.smoothedAngles?.torso ?? 0, this.smoothedAngles?.torso),
       valgus: this.smooth(rawValgus, this.smoothedAngles?.valgus),
     };
     this.smoothedAngles = smoothed;

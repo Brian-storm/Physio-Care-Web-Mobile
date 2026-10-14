@@ -160,8 +160,8 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
 
       // Convert normalized coordinates (fractions of the image) to canvas pixels.
       const toCanvas = (lm: Landmark) => ({
-        x: lm.x * w,
-        y: lm.y * h,
+      x: (1 - lm.x) * w,   // 鏡像：x 反轉
+      y: lm.y * h,
       });
 
       // Connect selected landmarks to visualize the torso, arms, legs, and feet.
@@ -191,8 +191,8 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
       // Keep text anchored near the corresponding joint groups while using the
       // exact filtered values calculated by SquatEngine for the side panel.
       const getMid = (indices: number[]) => ({
-        x: indices.reduce((sum, i) => sum + landmarks[i].x, 0) / indices.length * w,
-        y: indices.reduce((sum, i) => sum + landmarks[i].y, 0) / indices.length * h,
+      x: (1 - indices.reduce((sum, i) => sum + landmarks[i].x, 0) / indices.length) * w,
+      y: indices.reduce((sum, i) => sum + landmarks[i].y, 0) / indices.length * h,
       });
       const shoulder = getMid(KEY_LANDMARKS.shoulder);
       const hip = getMid(KEY_LANDMARKS.hip);
@@ -333,10 +333,11 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
         <div className="relative flex flex-1 items-center justify-center p-page">
           <div className="relative w-full max-w-4xl overflow-hidden rounded-md bg-surface shadow-panel">
             <video
-              ref={videoRef}
-              playsInline
-              muted
-              className="h-auto max-h-screen w-full object-cover"
+            ref={videoRef}
+            playsInline
+            muted
+            className="h-auto max-h-screen w-full object-cover"
+            style={{ transform: 'scaleX(-1)' }}
             />
             <canvas
               ref={canvasRef}
