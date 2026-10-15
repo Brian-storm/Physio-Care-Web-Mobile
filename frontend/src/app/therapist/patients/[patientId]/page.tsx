@@ -77,10 +77,10 @@ export default function TherapistPatientPage({ params }: TherapistPatientPagePro
 /** Enumerate synthetic demo routes for Cloudflare static export. */
 // src/app/therapist/patients/[patientId]/page.tsx
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   return [
     { patientId: 'demo-patient-01' },
-    { patientId: 'john-doe' },    // <-- Add John
-    { patientId: 'jane-smith' },  // <-- Add Jane
+    { patientId: 'john-patient-002' }, // Matches JOHN_PATIENT.id
+    { patientId: 'jane-patient-003' }, // Matches JANE_PATIENT.id
   ];
 }
