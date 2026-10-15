@@ -33,7 +33,12 @@ export default function TherapistProgressPage({ params }: TherapistProgressPageP
     .join(' ');
 
   return (
-    <Phase1PortalShell role="therapist" activeHref={PHASE1_ROUTES.therapistProgress(patient.id)}>
+    <Phase1PortalShell 
+  role="therapist" 
+  activeHref={PHASE1_ROUTES.therapistProgress(patient.id)}
+  patientId={patient.id}
+  patientName={patient.name}
+>
       <div className="grid gap-8">
         <section>
           <Badge variant="primary">進度報告 · Progress report</Badge>

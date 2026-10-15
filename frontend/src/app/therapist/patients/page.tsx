@@ -3,17 +3,15 @@
 import Link from 'next/link';
 import { Phase1PortalShell } from '@/components/layout/Phase1PortalShell';
 import { Badge, Table, TableCell, TableHead } from '@/components/ui';
-import { DEMO_PATIENT, DEMO_PROGRESS, DEMO_SESSIONS, formatDemoDate } from '@/data/phase1DemoData';
+import { ALL_THERAPIST_PATIENTS, PATIENT_RECORDS_MAP, formatDemoDate } from '@/data/phase1DemoData';
 import { PHASE1_ROUTES } from '@/constants/phase1Routes';
 
 /**
- * Render the therapist patient list using the synthetic Phase 1 demo record.
+ * Render the therapist patient list using the synthetic Phase 1 demo records.
  *
- * @returns A patient-check table with recent activity and review status.
+ * @returns A patient-check table with recent activity and review status for all patients.
  */
 export default function TherapistPatientsPage(): React.JSX.Element {
-  const latestSession = DEMO_SESSIONS[DEMO_SESSIONS.length - 1];
-
   return (
     <Phase1PortalShell role="therapist" activeHref={PHASE1_ROUTES.therapistPatients}>
       <div className="grid gap-8">
@@ -38,14 +36,40 @@ export default function TherapistPatientsPage(): React.JSX.Element {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <TableCell><strong>{DEMO_PATIENT.name}</strong></TableCell>
-                <TableCell>{DEMO_PATIENT.rehabGoal}</TableCell>
-                <TableCell>{latestSession.repsCompleted} / 10 次 · {formatDemoDate(latestSession.startedAt)}</TableCell>
-                <TableCell>{DEMO_PROGRESS.averageFormScore} / 100</TableCell>
-                <TableCell>{latestSession.flagged ? <Badge variant="warning">需留意 1 次</Badge> : <Badge variant="success">趨勢穩定</Badge>}</TableCell>
-                <TableCell><Link href={PHASE1_ROUTES.therapistPatient(DEMO_PATIENT.id)} className="font-semibold text-primary-800 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500">查看患者</Link></TableCell>
-              </tr>
+              {ALL_THERAPIST_PATIENTS.map((patient) => {
+                const record = PATIENT_RECORDS_MAP[patient.id];
+                const latestSession = record?.sessions[record.sessions.length - 1];
+
+                return (
+                  <tr key={patient.id}>
+                    <TableCell><strong>{patient.name}</strong></TableCell>
+                    <TableCell>{patient.rehabGoal}</TableCell>
+                    <TableCell>
+                      {latestSession 
+                        ? `${latestSession.repsCompleted} / 10 次 · ${formatDemoDate(latestSession.startedAt)}`
+                        : '尚無近期紀錄'}
+                    </TableCell>
+                    <TableCell>
+                      {record?.progress ? `${record.progress.averageFormScore} / 100` : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {latestSession?.flagged ? (
+                        <Badge variant="warning">需留意 1 次</Badge>
+                      ) : (
+                        <Badge variant="success">趨勢穩定</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Link 
+                        href={PHASE1_ROUTES.therapistPatient(patient.id)} 
+                        className="font-semibold text-primary-800 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
+                      >
+                        查看患者
+                      </Link>
+                    </TableCell>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
           <p className="mt-4 text-pc-13 text-ink-muted">示範資料為虛構；目前列表不會讀取或儲存後端資料。</p>

@@ -1,7 +1,7 @@
 /* PhysioCare — TailwindCSS theme mapped to the Kinetic Atlas tokens. Expected result: semantic Tailwind classes resolve to the shared token source. */
 
 /** @type {import('tailwindcss').Config} */
-const colorSteps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+const colorSteps = [50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900];
 
 /**
  * Build a Tailwind color scale from CSS design-token variables.

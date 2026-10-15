@@ -31,7 +31,12 @@ export default function TherapistPatientPage({ params }: TherapistPatientPagePro
   const latestSession = DEMO_SESSIONS[DEMO_SESSIONS.length - 1];
 
   return (
-    <Phase1PortalShell role="therapist" activeHref={PHASE1_ROUTES.therapistPatient(patient.id)}>
+    <Phase1PortalShell 
+  role="therapist" 
+  activeHref={PHASE1_ROUTES.therapistPatient(patient.id)}
+  patientId={patient.id}
+  patientName={patient.name}
+>
       <div className="grid gap-8">
         <section>
           <Badge variant="primary">患者概覽 · Patient check</Badge>

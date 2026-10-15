@@ -51,6 +51,7 @@ function therapistProgressRoute(patientId: string): string {
 export const PHASE1_ROUTES = {
   entry: '/',
   patientHome: '/patient',
+  patientOverview: '/patient/overview',
   sessionSetup: '/patient/session/new',
   liveSession: liveSessionRoute,
   patientResult: patientResultRoute,

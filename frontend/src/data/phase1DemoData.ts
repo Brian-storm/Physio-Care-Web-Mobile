@@ -18,6 +18,24 @@ export const DEMO_PATIENT: Phase1Patient = {
   weeklyTargetSessions: 4,
 };
 
+
+export const JOHN_PATIENT: Phase1Patient = {
+  id: 'john-patient-002',
+  name: 'John Patient',
+  rehabGoal: '術後關節活動度重建與核心穩定。',
+  therapistName: 'Dr. Avery Lin',
+  exerciseId: 'chair-squat-demo',
+  weeklyTargetSessions: 3,
+};
+
+export const JANE_PATIENT: Phase1Patient = {
+  id: 'jane-patient-003',
+  name: 'Jane Patient',
+  rehabGoal: '下肢肌力強化與平衡感訓練。',
+  therapistName: 'Dr. Avery Lin',
+  exerciseId: 'chair-squat-demo',
+  weeklyTargetSessions: 3,
+};
 export const DEMO_EXERCISE: Phase1Exercise = {
   id: 'chair-squat-demo',
   name: '椅子深蹲',
@@ -99,6 +117,87 @@ export const DEMO_PROGRESS: Phase1ProgressReport = {
   sessions: DEMO_SESSIONS,
 };
 
+export const JOHN_SESSIONS: Phase1SessionRecord[] = [
+  {
+    id: 'john-session-001',
+    patientId: 'john-patient-002',
+    exerciseId: DEMO_EXERCISE.id,
+    startedAt: '2026-10-04T10:00:00.000Z',
+    repsCompleted: 10,
+    setsCompleted: 3,
+    averageFormScore: 88,
+    maximumDangerScore: 15,
+    painScore: 0,
+    durationSeconds: 350,
+    flagged: false,
+  },
+];
+
+export const JOHN_PROGRESS: Phase1ProgressReport = {
+  patientId: 'john-patient-002',
+  totalSessions: JOHN_SESSIONS.length,
+  totalReps: JOHN_SESSIONS.reduce((total, session) => total + session.repsCompleted, 0),
+  averageFormScore: JOHN_SESSIONS[0].averageFormScore,
+  averageDangerScore: JOHN_SESSIONS[0].maximumDangerScore,
+  flaggedSessions: JOHN_SESSIONS.filter((session) => session.flagged).length,
+  trend: 'improving',
+  sessions: JOHN_SESSIONS,
+};
+
+// Jane Patient — 1 sample session & progress report
+export const JANE_SESSIONS: Phase1SessionRecord[] = [
+  {
+    id: 'jane-session-001',
+    patientId: 'jane-patient-003',
+    exerciseId: DEMO_EXERCISE.id,
+    startedAt: '2026-10-04T11:00:00.000Z',
+    repsCompleted: 9,
+    setsCompleted: 3,
+    averageFormScore: 81,
+    maximumDangerScore: 20,
+    painScore: 1,
+    durationSeconds: 370,
+    flagged: false,
+  },
+];
+
+export const JANE_PROGRESS: Phase1ProgressReport = {
+  patientId: 'jane-patient-003',
+  totalSessions: JANE_SESSIONS.length,
+  totalReps: JANE_SESSIONS.reduce((total, session) => total + session.repsCompleted, 0),
+  averageFormScore: JANE_SESSIONS[0].averageFormScore,
+  averageDangerScore: JANE_SESSIONS[0].maximumDangerScore,
+  flaggedSessions: JANE_SESSIONS.filter((session) => session.flagged).length,
+  trend: 'improving',
+  sessions: JANE_SESSIONS,
+};
+
+// Data Map
+export const ALL_THERAPIST_PATIENTS: Phase1Patient[] = [
+  DEMO_PATIENT,
+  JOHN_PATIENT,
+  JANE_PATIENT,
+];
+
+export const PATIENT_RECORDS_MAP = {
+  [DEMO_PATIENT.id]: {
+    patient: DEMO_PATIENT,
+    sessions: DEMO_SESSIONS,
+    progress: DEMO_PROGRESS,
+  },
+  [JOHN_PATIENT.id]: {
+    patient: JOHN_PATIENT,
+    sessions: JOHN_SESSIONS,
+    progress: JOHN_PROGRESS,
+  },
+  [JANE_PATIENT.id]: {
+    patient: JANE_PATIENT,
+    sessions: JANE_SESSIONS,
+    progress: JANE_PROGRESS,
+  },
+};
+
+
 export const DEFAULT_PHASE1_PAGE_STATE: Phase1PageState = 'ready';
 export const PHASE1_PAGE_STATES: Phase1PageState[] = [
   'ready',
@@ -140,5 +239,5 @@ export function findDemoSession(sessionId: string): Phase1SessionRecord | undefi
  * @returns The demo patient, or undefined when the identifier is not recognized.
  */
 export function findDemoPatient(patientId: string): Phase1Patient | undefined {
-  return patientId === DEMO_PATIENT.id ? DEMO_PATIENT : undefined;
+  return ALL_THERAPIST_PATIENTS.find((patient) => patient.id === patientId);
 }

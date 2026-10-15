@@ -13,12 +13,17 @@ import { DEMO_PATIENT } from '@/data/phase1DemoData';
 export default function HomePage(): React.JSX.Element {
   return (
     <main className="min-h-screen bg-surface-page text-ink">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-page py-5">
-        <div className="flex items-center gap-3 text-pc-20 font-bold">
-          <span aria-hidden="true" className="h-3 w-3 rounded-full bg-primary-600" />
-          PhysioCare
+      <header className="border-b border-line">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-page py-5">
+          <Link 
+            href={PHASE1_ROUTES.entry} 
+            className="flex items-center gap-3 text-pc-20 font-bold text-ink no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
+          >
+            <span aria-hidden="true" className="h-3 w-3 rounded-full bg-primary-600" />
+            PhysioCare
+          </Link>
+          <span className="text-pc-14 text-ink-muted">居家復健 · Home rehabilitation</span>
         </div>
-        <span className="text-pc-14 text-ink-muted">居家復健 · Home rehabilitation</span>
       </header>
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-page py-12 lg:grid-cols-[1.15fr_.85fr] lg:items-center">
         <section>
@@ -33,33 +38,38 @@ export default function HomePage(): React.JSX.Element {
             description="人體姿勢與移動路徑示意；訓練結果仍由治療師檢視。"
           />
         </section>
-        <section aria-labelledby="workspace-title" className="grid gap-6">
+        <section aria-labelledby="workspace-title" className="bg-primary-50 p-card shadow-panel grid gap-6">
           <h2 id="workspace-title" className="text-pc-24 font-semibold">選擇工作區 Choose a workspace</h2>
-          <div className="bg-surface p-card">
-            <h3 className="text-pc-20 font-semibold">患者 Patient</h3>
-            <p className="mt-2 text-pc-14 leading-relaxed text-ink-muted">
-              {DEMO_PATIENT.name}，查看今日訓練目標、開始動作分析並檢視結果。
-            </p>
-            <Link
-              href={PHASE1_ROUTES.patientHome}
-              className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-primary-700 px-4 text-pc-16 font-semibold text-neutral-50 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500 focus-visible:ring-offset-2"
-            >
-              進入患者入口
-            </Link>
+          
+          <div className="grid gap-4">
+            <div className="bg-surface p-card border border-line">
+              <h3 className="text-pc-20 font-semibold">患者 Patient</h3>
+              <p className="mt-2 text-pc-14 leading-relaxed text-ink-muted">
+                {DEMO_PATIENT.name}，查看今日訓練目標、開始動作分析並檢視結果。
+              </p>
+              <Link
+                href={PHASE1_ROUTES.patientHome}
+                className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-primary-700 px-4 text-pc-16 font-semibold text-neutral-50 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500 focus-visible:ring-offset-2"
+              >
+                進入患者入口
+              </Link>
+            </div>
+
+            <div className="bg-surface p-card border border-line">
+              <h3 className="text-pc-20 font-semibold">物理治療師 Physiotherapist</h3>
+              <p className="mt-2 text-pc-14 leading-relaxed text-ink-muted">
+                查看患者最近訓練、動作測量與進度報告。
+              </p>
+              <Link
+                href={PHASE1_ROUTES.therapistPatients}
+                className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-primary-700 px-4 text-pc-16 font-semibold text-neutral-50 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500 focus-visible:ring-offset-2"
+              >
+                進入治療師工作區
+              </Link>
+            </div>
           </div>
-          <div className="bg-primary-50 p-card">
-            <h3 className="text-pc-20 font-semibold">物理治療師 Physiotherapist</h3>
-            <p className="mt-2 text-pc-14 leading-relaxed text-ink-muted">
-              查看患者最近訓練、動作測量與進度報告。
-            </p>
-            <Link
-              href={PHASE1_ROUTES.therapistPatients}
-              className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-primary-700 px-4 text-pc-16 font-semibold text-neutral-50 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500 focus-visible:ring-offset-2"
-            >
-              進入治療師工作區
-            </Link>
-          </div>
-          <p className="text-pc-13 leading-relaxed text-ink-muted">
+
+          <p className="text-pc-13 leading-relaxed text-ink-muted border-t border-line pt-4">
             示範模式使用虛構資料；目前未連接登入、資料庫或後端 API。
           </p>
         </section>

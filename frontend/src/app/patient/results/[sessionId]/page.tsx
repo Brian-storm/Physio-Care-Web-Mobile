@@ -64,7 +64,7 @@ export default function PatientResultPage({ params }: PatientResultPageProps): R
             </dl>
             {session.flagged && <Alert tone="warning" className="mt-6" title="有一項動作訊號需要留意">{session.flagReason}</Alert>}
             <p className="mt-5 text-pc-13 leading-relaxed text-ink-muted">數據供治療師檢視參考，不會自動診斷或調整治療計劃。</p>
-            <Link href={PHASE1_ROUTES.patientHome} className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-primary-700 px-4 text-pc-16 font-semibold text-neutral-50 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500 focus-visible:ring-offset-2">返回今日概況</Link>
+            <Link href={PHASE1_ROUTES.patientHome} className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-primary-700 px-4 text-pc-16 font-semibold text-neutral-50 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500 focus-visible:ring-offset-2">返回病人主頁</Link>
           </section>
         </div>
       </div>
