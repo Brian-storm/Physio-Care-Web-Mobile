@@ -57,6 +57,7 @@ export class SquatEngine {
 
   /** Count of fully completed repetitions. */
   private repCount = 0;
+  private setCount = 1;
 
   /** Current per-frame feedback values. */
   private formScore = 100;
@@ -190,7 +191,20 @@ export class SquatEngine {
     this.candidatePhase = null;
     this.candidateFrameCount = 0;
 
-    if (candidate === 'completed') this.repCount += 1;
+    if (candidate === 'completed') {
+      this.repCount += 1;
+
+      // 當次數超過目標（例如第 13 次），直接進入下一組，並把這次算作新一組的第 1 次
+      if (this.repCount > this.targetReps) {
+        if (this.setCount < this.targetSets) {
+          this.setCount += 1;
+          this.repCount = 1;
+        } else {
+          // 已經是最後一組，次數停在目標次數，不再增加
+          this.repCount = this.targetReps;
+        }
+      }
+    }
   }
 
   /**
@@ -318,7 +332,7 @@ export class SquatEngine {
       exercise: 'Squat',
       phase: this.phase,
       repCount: this.repCount,
-      setCount: Math.min(Math.floor(this.repCount / this.targetReps) + 1, this.targetSets),
+      setCount: (this.setCount),
       targetSets: this.targetSets,
       targetReps: this.targetReps,
       angles,
@@ -336,6 +350,7 @@ export class SquatEngine {
   reset(): void {
     this.phase = 'idle';
     this.repCount = 0;
+    this.setCount = 1;
     this.formScore = 100;
     this.dangerScore = 0;
     this.isFlagged = false;

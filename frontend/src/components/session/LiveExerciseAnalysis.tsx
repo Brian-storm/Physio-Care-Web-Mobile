@@ -130,11 +130,28 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
     () => engineRef.current.getInitialState()
   );
 
+  const [alertFlash, setAlertFlash] = useState(false);
+  const prevFlaggedRef = useRef(false);
+
   // `useCamera` requests webcam permission and manages stream cleanup.
   const { videoRef, isReady: cameraReady, error: cameraError } = useCamera();
-
   // `init` loads MediaPipe once the camera is usable; `detect` analyzes one frame.
   const { init: initPose, detect: detectPose, isInitializing, isInitialized } = usePose();
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (exerciseState.isFlagged) {
+      setAlertFlash(true);
+      timer = setTimeout(() => {
+        setAlertFlash(false);
+      }, 1500);
+    } else {
+      // 如果動作糾正了，立刻讓警報消失
+      setAlertFlash(false);
+    }
+    // 清理函數：如果 isFlagged 再次變化，先清掉上一個定時器
+    return () => clearTimeout(timer);
+  }, [exerciseState.isFlagged]);
 
   /**
    * Draw the detected body pose and angle labels over the camera image.
@@ -184,8 +201,8 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
 
       // Convert normalized coordinates (fractions of the image) to canvas pixels.
       const toCanvas = (lm: Landmark) => ({
-      x: (1 - lm.x) * w,   // 鏡像：x 反轉
-      y: lm.y * h,
+        x: (1 - lm.x) * w,   // 鏡像：x 反轉
+        y: lm.y * h,
       });
 
       // Connect selected landmarks to visualize the torso, arms, legs, and feet.
@@ -215,8 +232,8 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
       // Keep text anchored near the corresponding joint groups while using the
       // exact filtered values calculated by SquatEngine for the side panel.
       const getMid = (indices: number[]) => ({
-      x: (1 - indices.reduce((sum, i) => sum + landmarks[i].x, 0) / indices.length) * w,
-      y: indices.reduce((sum, i) => sum + landmarks[i].y, 0) / indices.length * h,
+        x: (1 - indices.reduce((sum, i) => sum + landmarks[i].x, 0) / indices.length) * w,
+        y: indices.reduce((sum, i) => sum + landmarks[i].y, 0) / indices.length * h,
       });
       const shoulder = getMid(KEY_LANDMARKS.shoulder);
       const hip = getMid(KEY_LANDMARKS.hip);
@@ -369,11 +386,11 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
         <div className="relative flex flex-1 items-center justify-center p-page">
           <div className="relative w-full max-w-4xl overflow-hidden rounded-md bg-surface shadow-panel">
             <video
-            ref={videoRef}
-            playsInline
-            muted
-            className="h-auto max-h-screen w-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
+              ref={videoRef}
+              playsInline
+              muted
+              className="h-auto max-h-screen w-full object-cover"
+              style={{ transform: 'scaleX(-1)' }}
             />
             <canvas
               ref={canvasRef}
@@ -445,20 +462,18 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
             {exerciseState.angles.map((angle) => (
               <div
                 key={angle.name}
-                className={`border-l-4 p-3 ${
-                  angle.status === 'target'
+                className={`border-l-4 p-3 ${angle.status === 'target'
                     ? 'border-success-400 bg-neutral-800'
                     : 'border-warning-400 bg-neutral-800'
-                }`}
-            >
+                  }`}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-pc-12 text-ink-muted">{angle.name}</span>
                   <span
-                    className={`text-pc-14 font-bold ${
-                      angle.status === 'target'
+                    className={`text-pc-14 font-bold ${angle.status === 'target'
                         ? 'text-success-300'
                         : 'text-warning-300'
-                    }`}
+                      }`}
                   >
                     {angle.value}°
                   </span>
@@ -484,13 +499,12 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
             <div className="flex items-center justify-between bg-neutral-800 p-3">
               <span className="text-pc-14">動作品質 · Form score</span>
               <span
-                className={`text-sm font-bold ${
-                  exerciseState.formScore >= 80
+                className={`text-sm font-bold ${exerciseState.formScore >= 80
                     ? 'text-success-300'
                     : exerciseState.formScore >= 50
-                    ? 'text-warning-300'
-                    : 'text-danger-300'
-                }`}
+                      ? 'text-warning-300'
+                      : 'text-danger-300'
+                  }`}
               >
                 {exerciseState.formScore}%
               </span>
@@ -498,13 +512,12 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
             <div className="flex items-center justify-between bg-neutral-800 p-3">
               <span className="text-pc-14">風險測量 · Risk measure</span>
               <span
-                className={`text-sm font-bold ${
-                  exerciseState.dangerScore < 25
+                className={`text-sm font-bold ${exerciseState.dangerScore < 25
                     ? 'text-success-300'
                     : exerciseState.dangerScore < 50
-                    ? 'text-warning-300'
-                    : 'text-danger-300'
-                }`}
+                      ? 'text-warning-300'
+                      : 'text-danger-300'
+                  }`}
               >
                 {exerciseState.dangerScore}%
               </span>
@@ -512,7 +525,7 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
           </div>
 
           {/* Show an additional message only when the engine raises its flag. */}
-          {exerciseState.isFlagged && (
+          {false && (
             <div role="alert" className="border-l-4 border-danger-300 bg-neutral-800 p-3 text-pc-14 font-medium text-danger-300">
               偵測到需要留意的動作訊號。
               <p className="mt-1 text-pc-13 text-ink-muted">若感到不適，請停止並聯絡治療師。</p>
@@ -520,25 +533,39 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
           )}
 
           <div className="mt-auto grid gap-3 pt-6">
-          {/* Reset the engine's counters and state, then publish a fresh display snapshot. */}
-          <button
-            onClick={() => {
-              engineRef.current.reset();
-              setExerciseState(engineRef.current.getInitialState());
-            }}
-            className="min-h-11 rounded-sm bg-neutral-700 px-4 text-pc-14 font-semibold hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
-          >
-            重設本次分析
-          </button>
-          {/* Navigate to the demo result page; this action does not persist the
+            {/* Reset the engine's counters and state, then publish a fresh display snapshot. */}
+            <button
+              onClick={() => {
+                engineRef.current.reset();
+                setExerciseState(engineRef.current.getInitialState());
+              }}
+              className="min-h-11 rounded-sm bg-neutral-700 px-4 text-pc-14 font-semibold hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
+            >
+              重設本次分析
+            </button>
+            {/* Navigate to the demo result page; this action does not persist the
               metrics currently shown in this live analysis component. */}
-          <Link href={PHASE1_ROUTES.patientResult(sessionId || DEMO_SESSION_ID)} className="inline-flex min-h-11 items-center justify-center rounded-sm bg-primary-300 px-4 text-pc-14 font-semibold text-neutral-900 hover:bg-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500">
-            結束並看示範結果
-          </Link>
-          <p className="text-pc-12 leading-relaxed text-ink-muted">此頁即時分析使用鏡頭；結果頁為預載示範資料，本次數值尚未儲存。</p>
+            <Link href={PHASE1_ROUTES.patientResult(sessionId || DEMO_SESSION_ID)} className="inline-flex min-h-11 items-center justify-center rounded-sm bg-primary-300 px-4 text-pc-14 font-semibold text-neutral-900 hover:bg-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500">
+              結束並看示範結果
+            </Link>
+            <p className="text-pc-12 leading-relaxed text-ink-muted">此頁即時分析使用鏡頭；結果頁為預載示範資料，本次數值尚未儲存。</p>
           </div>
         </div>
       </div>
+      {alertFlash && (
+        <>
+          <style>{`
+              @keyframes alertFlash {
+                0%, 100% { opacity: 0.45; }
+                50% { opacity: 0.2; }
+              }
+              .alert-flash-overlay {
+                animation: alertFlash 0.25s ease-in-out 6;
+              }
+            `}</style>
+          <div className="alert-flash-overlay pointer-events-none fixed inset-0 z-[100] bg-red-500 opacity-0" />
+        </>
+      )}
     </div>
   );
 }
