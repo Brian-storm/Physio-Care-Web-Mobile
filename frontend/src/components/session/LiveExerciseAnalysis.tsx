@@ -100,6 +100,22 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
   // it in a ref preserves that internal state without triggering React renders.
   const engineRef = useRef(new SquatEngine());
 
+  // 用來累積整場訓練的數據
+  const sessionStatsRef = useRef({
+    kneeSum: 0,
+    torsoSum: 0,
+    formScoreSum: 0,
+    frameCount: 0,
+    flagCount: 0,
+  });
+
+  // 用來避免同一幀重複計算警報次數
+  const prevFlaggedForStatsRef = useRef(false);
+
+  // 控制報告 Modal 的顯示與內容
+  const [reportText, setReportText] = useState<string | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+
   const lastSpokenRef = useRef<{ message: string; time: number } | null>(null);
   const SPEAK_COOLDOWN_MS = 6000; // 3 秒內同一句話不重複
 
@@ -111,10 +127,10 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
       lastSpokenRef.current.message === message &&
       now - lastSpokenRef.current.time < SPEAK_COOLDOWN_MS
     ) {
-      return;
+      return false;
     }
     if (window.speechSynthesis.speaking) {
-      return;
+      return false;
     }
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.lang = 'zh-HK';
@@ -122,6 +138,7 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
     utterance.pitch = 1.0;
     window.speechSynthesis.speak(utterance);
     lastSpokenRef.current = { message, time: now };
+    return true;
   }, []);
 
   // Show a neutral panel until the first confident pose is analyzed. Placeholder
@@ -137,6 +154,15 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
   const { videoRef, isReady: cameraReady, error: cameraError } = useCamera();
   // `init` loads MediaPipe once the camera is usable; `detect` analyzes one frame.
   const { init: initPose, detect: detectPose, isInitializing, isInitialized } = usePose();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      const warmUpUtterance = new SpeechSynthesisUtterance(' ');
+      warmUpUtterance.volume = 0;
+      window.speechSynthesis.speak(warmUpUtterance);
+    }
+  }, []);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -316,25 +342,86 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
         : 1;
       const state = engineRef.current.update(landmarkSet, aspectRatio);
       setExerciseState(state);
-      drawSkeleton(result.landmarks, video, canvas, state);
+
+      // 👇 累積數據用於生成報告
+      const stats = sessionStatsRef.current;
+      if (state.angles[0].value > 0) { // 確保有抓到有效角度
+        stats.kneeSum += state.angles[0].value;
+        stats.torsoSum += state.angles[2].value;
+        stats.formScoreSum += state.formScore;
+        stats.frameCount += 1;
+      }
       if (state.isFlagged) {
         const torso = state.angles[2].value; // Torso Lean
         const knee = state.angles[0].value;  // Knee Flexion
-
+        
+        let message = '';
         if (torso > 40) {
-          speak('軀幹前傾過大，請保持背部直立');
+          message = '軀幹前傾過大，請保持背部直立';
         } else if (knee < 60) {
-          speak('蹲得太深，請減小幅度');
+          message = '蹲得太深，請減小幅度';
         } else {
-          speak('動作需要留意，請放慢速度');
+          message = '動作需要留意，請放慢速度';
+        }
+
+        // 如果語音成功播放了，才把警報次數 +1
+        const didSpeak = speak(message);
+        if (didSpeak) {
+          stats.flagCount += 1;
         }
       }
+
+      drawSkeleton(result.landmarks, video, canvas, state);
     }
 
     // Schedule the next camera-frame analysis. A missing pose on this frame
     // simply skips the update; a later frame can resume normal analysis.
     animFrameRef.current = requestAnimationFrame(processFrame);
-  }, [cameraReady, isInitialized, videoRef, detectPose, drawSkeleton]);
+  }, [cameraReady, isInitialized, videoRef, detectPose, drawSkeleton, speak]);
+
+
+
+  const handleFinishSession = async () => {
+    // 1. 彈出輸入框讓患者自測疼痛
+    const painInput = window.prompt('請評估您今天的疼痛程度 (0-10分，0為無痛，10為劇痛)：', '3');
+    
+    // 2. 處理輸入值（防呆：如果按取消、輸入空白或亂碼，就預設為 3 分）
+    let painScore = painInput !== null ? parseInt(painInput, 10) : 3;
+    if (isNaN(painScore)) painScore = 3;
+    painScore = Math.max(0, Math.min(10, painScore)); // 確保在 0-10 之間
+
+    setIsGeneratingReport(true);
+    const stats = sessionStatsRef.current;
+    const avgKnee = stats.frameCount > 0 ? stats.kneeSum / stats.frameCount : 0;
+    const avgTorso = stats.frameCount > 0 ? stats.torsoSum / stats.frameCount : 0;
+
+    const avgFormScore = stats.frameCount > 0 ? Math.round(stats.formScoreSum / stats.frameCount) : 100;
+
+    try {
+      const response = await fetch('http://localhost:9000/api/v1/report/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          total_reps: exerciseState.repCount,
+          total_sets: exerciseState.setCount,
+          avg_knee_angle: avgKnee,
+          avg_torso_lean: avgTorso,
+          form_score: avgFormScore,
+          flag_count: stats.flagCount,
+          pain_score: painScore, // 👈 這裡改成傳入剛剛獲取的分數
+        }),
+      });
+
+      if (!response.ok) throw new Error('API 請求失敗');
+      const data = await response.json();
+      setReportText(data.summary);
+    } catch (error) {
+      console.error(error);
+      setReportText('無法生成報告，請檢查網絡或後端連線。');
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   // Initialize MediaPipe after camera access succeeds. The state flags prevent
   // duplicate initialization while a load is already underway or completed.
@@ -545,13 +632,37 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
             </button>
             {/* Navigate to the demo result page; this action does not persist the
               metrics currently shown in this live analysis component. */}
-            <Link href={PHASE1_ROUTES.patientResult(sessionId || DEMO_SESSION_ID)} className="inline-flex min-h-11 items-center justify-center rounded-sm bg-primary-300 px-4 text-pc-14 font-semibold text-neutral-900 hover:bg-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500">
-              結束並看示範結果
-            </Link>
-            <p className="text-pc-12 leading-relaxed text-ink-muted">此頁即時分析使用鏡頭；結果頁為預載示範資料，本次數值尚未儲存。</p>
+            <button
+              onClick={handleFinishSession}
+              disabled={isGeneratingReport}
+              className="inline-flex min-h-11 items-center justify-center rounded-sm bg-primary-300 px-4 text-pc-14 font-semibold text-neutral-900 hover:bg-primary-200 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
+            >
+              {isGeneratingReport ? '生成報告中...' : '結束並生成報告'}
+            </button>
+            <p className="text-pc-12 leading-relaxed text-ink-muted">點擊結束後，AI 將根據本次訓練數據生成專屬治療師報告。</p>
           </div>
         </div>
       </div>
+
+      {/* 👇 把顯示報告的彈窗加在這裡 👇 */}
+      {reportText && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl text-neutral-900">
+            <h2 className="mb-4 text-xl font-bold">今日訓練總結</h2>
+            <p className="whitespace-pre-wrap leading-relaxed text-neutral-700">
+              {reportText}
+            </p>
+            <button
+              onClick={() => setReportText(null)}
+              className="mt-6 w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700"
+            >
+              關閉
+            </button>
+          </div>
+        </div>
+      )}
+      {/* 👆 把顯示報告的彈窗加在這裡 👆 */}
+      
       {alertFlash && (
         <>
           <style>{`

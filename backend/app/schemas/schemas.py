@@ -3,7 +3,19 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel, Field
 
+class SessionReportRequest(BaseModel):
+    total_reps: int = Field(..., ge=0)
+    total_sets: int = Field(..., ge=0)
+    avg_knee_angle: float
+    avg_torso_lean: float
+    form_score: int = Field(..., ge=0, le=100)
+    flag_count: int = Field(0, ge=0)
+    pain_score: int | None = Field(None, ge=0, le=10)
+
+class SessionReportResponse(BaseModel):
+    summary: str
 
 class PatientCreate(BaseModel):
     """Request body for creating a new patient."""

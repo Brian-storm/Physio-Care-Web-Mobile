@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 hours
 
+    gemini_api_key: str = ""
+    gemini_model_name: str = "gemini-2.5-flash"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

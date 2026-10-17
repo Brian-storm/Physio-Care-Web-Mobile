@@ -287,9 +287,20 @@ export class SquatEngine {
   /** Convert current measurements and engine counters into the UI snapshot. */
   private createState(measurements: SmoothedAngles): ExerciseState {
     let deductions = 0;
-    if (measurements.torso > 40) deductions += 15;
-    else if (measurements.torso > 30) deductions += 5;
-    if (measurements.valgus > 0.1) deductions += 20;
+    
+    // 1. 評估軀幹前傾（側面視角最重要的指標）
+    if (measurements.torso > 45) deductions += 30;      // 嚴重前傾（危險）
+    else if (measurements.torso > 35) deductions += 20; // 中度前傾
+    else if (measurements.torso > 25) deductions += 10; // 輕度前傾
+
+    // 2. 評估膝蓋蹲得過深（小於 55 度對膝蓋壓力較大）
+    if (measurements.knee < 55) deductions += 20;
+    else if (measurements.knee < 65) deductions += 10;
+
+    // （未來如果恢復雙側追蹤，可以把膝內扣的扣分加回來）
+    // if (measurements.valgus > 0.1) deductions += 20;
+
+    // 計算最終分數（最低 0 分）
     this.formScore = Math.max(0, 100 - deductions);
 
     let risk = 0;

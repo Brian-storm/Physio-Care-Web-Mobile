@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.core.database import get_session
 from app.models.models import Patient, PrescribedExercise, SessionRecord
+from app.schemas.schemas import SessionReportRequest, SessionReportResponse
+from app.services.llm_service import generate_session_summary
 from app.schemas.schemas import (
     PatientCreate,
     PatientResponse,
@@ -135,3 +137,16 @@ def get_progress_report(patient_id: str, session: Session = Depends(get_session)
         latest_session=SessionResponse(**latest.model_dump()),
         trend=trend,
     )
+
+@router.post("/report/session", response_model=SessionReportResponse)
+def create_session_report(payload: SessionReportRequest):
+    summary = generate_session_summary(
+        total_reps=payload.total_reps,
+        total_sets=payload.total_sets,
+        avg_knee_angle=payload.avg_knee_angle,
+        avg_torso_lean=payload.avg_torso_lean,
+        form_score=payload.form_score,
+        flag_count=payload.flag_count,
+        pain_score=payload.pain_score,
+    )
+    return SessionReportResponse(summary=summary)
