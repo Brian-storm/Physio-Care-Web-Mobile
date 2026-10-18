@@ -11,6 +11,8 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    # In your main.py
+    redirect_slashes=False,
 )
 
 app.add_middleware(

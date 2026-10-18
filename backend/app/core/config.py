@@ -14,14 +14,17 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""
 
-    cors_origins: list[str] = ["http://localhost:3000", "https://physio-care.pages.dev"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "https://physiocare-demo.bswiaosksnxbxhsjwj.workers.dev",
+    ]
 
     jwt_secret: str = "physiocare-dev-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 hours
 
     gemini_api_key: str = ""
-    gemini_model_name: str = "gemini-2.5-flash"
+    gemini_model_name: str = "gemini-3.8-flash"
 
     class Config:
         env_file = ".env"

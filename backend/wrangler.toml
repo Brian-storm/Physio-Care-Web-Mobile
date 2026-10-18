@@ -1,0 +1,12 @@
+name = "physiocare-backend"
+main = "main.py"  # Or your entry point script file
+compatibility_date = "2024-03-01"
+
+[vars]
+# Non-sensitive environment variables go here
+APP_NAME = "PhysioCare API"
+DEBUG = "false"
+GEMINI_MODEL_NAME = "gemini-3.8-flash"
+
+# Note: Never put your JWT_SECRET or GEMINI_API_KEY inside [vars] here! 
+# Use Cloudflare Secrets instead so they remain encrypted.
