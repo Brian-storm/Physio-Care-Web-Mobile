@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""
 
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:3000", "https://physio-care.pages.dev"]
 
     jwt_secret: str = "physiocare-dev-secret-change-in-production"
     jwt_algorithm: str = "HS256"

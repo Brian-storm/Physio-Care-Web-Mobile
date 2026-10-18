@@ -18,6 +18,9 @@ import {
 import { DEMO_SESSION_ID, PHASE1_ROUTES } from '@/constants/phase1Routes';
 import type { Landmark, ExerciseState, ExercisePhase } from '@/types/pose';
 
+// Dev/Prod url made here
+const api_base_url = process.env.NEXT_PUBLIC_API_URL || '';
+
 export interface LiveExerciseAnalysisProps {
   /** Session identifier used to build the link to the result page. */
   sessionId: string;
@@ -398,7 +401,7 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
     const avgFormScore = stats.frameCount > 0 ? Math.round(stats.formScoreSum / stats.frameCount) : 100;
 
     try {
-      const response = await fetch('http://localhost:9000/api/v1/report/session', {
+      const response = await fetch(`${api_base_url}/api/v1/report/session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
