@@ -39,37 +39,37 @@ PhysioCare bridges the gap between clinic visits by turning any webcam into a **
 │                                                                  │
 │  Webcam ──► MediaPipe Pose (on-device) ──► Joint Angles          │
 │                                    │                             │
-│                              ┌─────┴─────┐                      │
-│                              │ Squat     │                      │
-│                              │ Engine    │──► Form Score        │
+│                              ┌─────┴─────┐                       │
+│                              │ Squat     │                       │
+│                              │ Engine    │──► Form Score         │
 │                              │ (State    │──► Rep Count          │
 │                              │  Machine) │──► Danger Alert       │
-│                              └─────┬─────┘                      │
+│                              └─────┬─────┘                       │
 │                                    │                             │
-│  Canvas Overlay ◄── Skeleton + Angle Labels                     │
-│  Voice/Haptic Feedback ◄── Safety Cutoff                        │
+│  Canvas Overlay ◄── Skeleton + Angle Labels                      │
+│  Visual & Audio Alerts ◄── Full-screen Red Flash + Cantonese TTS |
 │                                                                  │
 └──────────────────────┬──────────────────────────────────────────┘
-                       │  Async: session data, flagged clips
+                       │  Async: session data, pain score
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   FastAPI Backend + Supabase                     │
-│                                                                  │
-│  ┌────────────┐  ┌──────────────┐  ┌───────────────────────┐   │
-│  │ Patient    │  │ Prescribed   │  │ Session Records       │   │
-│  │ Profile    │  │ Exercises    │  │ (form, danger, pain)  │   │
-│  └────────────┘  └──────────────┘  └───────────────────────┘   │
-│                                           │                     │
-│                                    ┌──────┴──────┐              │
-│                                    │ Progress    │              │
-│                                    │ Report      │              │
-│                                    └─────────────┘              │
+│                   FastAPI Backend + Google Gemini               │
+│                                                                 │
+│  ┌────────────┐  ┌──────────────┐  ┌───────────────────────┐    │
+│  │ Patient    │  │ Prescribed   │  │ Session Records       │    │
+│  │ Profile    │  │ Exercises    │  │ (form, danger, pain)  │    │
+│  └────────────┘  └──────────────┘  └───────────────────────┘    │
+│                                               │                 │
+│                                     ┌─────────┴─────────┐       │
+│                                     │ Gemini AI Summary │       │
+│                                     │ (Clinical Report) │       │
+│                                     └───────────────────┘       │
 └──────────────────────┬──────────────────────────────────────────┘
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Therapist Dashboard                           │
-│                                                                  │
+│                    Therapist Dashboard                          │
+│                                                                 │
 │  • Patient progress over time (form score, ROM, compliance)     │
 │  • Flagged session reviews with 5-second clip highlights        │
 │  • Exercise prescription management                             │
@@ -92,7 +92,8 @@ All pose estimation runs **100% on-device** via MediaPipe Tasks (WebAssembly/Web
 | **Exercise Engine** | Custom heuristic state machine | Zero latency, deterministic rep counting, form + danger scoring |
 | **Backend** | FastAPI (Python) | Async, auto-docs, natural fit for data analysis |
 | **Database** | SQLite (dev) / Supabase PostgreSQL (prod) | Simple dev setup, scales to production via Supabase |
-| **Deployment** | Vercel (frontend) + Render/Railway (backend) | Zero-config, hackathon-friendly |
+| **Deployment** | Cloudflare Pages (frontend) + Local/Cloud (backend) | Zero-config, hackathon-friendly |
+| **GenAI** | Google Gemini API (`google-genai`) | Generates professional clinical summaries based on objective session data |
 
 ---
 
@@ -128,6 +129,7 @@ PhysioCare/
 │   │   │   └── database.py         # Engine + session
 │   │   ├── models/models.py        # Patient, Exercise, Session, FlaggedClip
 │   │   ├── schemas/schemas.py      # Pydantic request/response schemas
+|   |   ├── services/llm_service.py # Google Gemini API integration
 │   │   └── api/endpoints.py        # REST endpoints
 │   ├── requirements.txt
 │   └── Dockerfile
@@ -145,38 +147,29 @@ PhysioCare/
 
 Using MediaPipe's Pose Landmarker, the system detects **33 3D body keypoints** at 30+ FPS directly in the browser. A skeleton overlay is drawn on a Canvas 2D layer above the webcam feed, with live angle labels at key joints.
 
-### 2. Exercise State Machine (Squat)
+### 2. Exercise State Machine & Form Scoring (Squat)
 
 A deterministic state machine tracks each rep through five phases:
+`idle → descending → bottom → ascending → completed`
 
-```
-idle → descending → bottom → ascending → completed
-```
+**Rep counting** triggers when the cycle completes. **Form scoring** (out of 100) deducts points based on side-on biomechanics:
+- **Excessive torso lean**: >45° (-30 pts), >35° (-20 pts), >25° (-10 pts)
+- **Excessive depth (Knee hyperflexion)**: <55° (-20 pts), <65° (-10 pts)
+*(Note: The current MVP prioritizes stable single-side sagittal plane analysis using a side-on view. Frontal plane metrics like knee valgus are out of scope for this phase and planned for a future dual-camera or front-view update.)*
 
-**Rep counting** triggers when the cycle completes. **Form scoring** deducts points for:
-- **Excessive torso lean** (>30° from vertical) — indicates poor core engagement
-- **Knee valgus** (knees caving inward) — high injury risk
-- **Insufficient depth** (knee angle >100° at bottom) — reduced exercise effectiveness
+### 3. Safety Alerts (Visual & Audio)
 
-### 3. Danger Assessment
+The system calculates a **danger score** (0–100%) based on severe compensations:
+- Torso lean > 40° (+50%)
+- Knee flexion < 60° (+50%)
 
-A composite **danger score** (0–100%) is computed each frame:
-- Knee valgus > threshold → +40%
-- Torso lean > 50° → +30%
-- Knee hyperflexion < 60° → +20%
+If the danger score reaches **50%**, it triggers:
+1. **Full-screen semi-transparent red flashes** (6 times within 1.5s).
+2. **Cantonese Text-to-Speech (TTS) audio alerts** (e.g., "軀幹前傾過大，請保持背部直立") via the Web Speech API.
 
-If danger exceeds **75% for 1.5+ seconds**, the session auto-flags and alerts the patient to stop.
+### 4. GenAI Clinical Report
 
-### 4. Session Recording & Progress Reports
-
-Each session is recorded with:
-- Reps/sets completed
-- Average form score
-- Maximum danger score
-- Self-reported pain score (1–10)
-- Flagged events
-
-The backend generates **progress reports** with trend analysis (improving/declining) and aggregates across all sessions for therapist review.
+After each session, the patient is prompted to self-report their pain score (0-10). The frontend calculates the **average form score across the entire session** (ignoring empty frames) and sends the session metrics (reps, sets, average angles, pain score, alert count) to the FastAPI backend. The backend uses the **Google Gemini API** to generate a professional, context-aware therapist summary.
 
 ### 5. Therapist Dashboard
 
@@ -220,11 +213,16 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1   # Windows
 # source venv/bin/activate    # macOS / Linux
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+
+# Create a .env file in the backend directory and add your Gemini API Key:
+# GEMINI_API_KEY=your_api_key_here
+# GEMINI_MODEL_NAME=gemini-3.8-flash
+
+uvicorn app.main:app --reload --port 9000
 ```
 
 The frontend is at `http://localhost:3000`; the backend API docs are at
-`http://localhost:8000/docs`.
+`http://localhost:9000/docs`.
 
 #### Run with Docker
 
@@ -235,7 +233,7 @@ docker compose up --build
 ```
 
 With Docker Compose, the frontend is at `http://localhost:3000` and the backend
-API docs are at `http://localhost:8000/docs`. Run either the local setup or Docker
+API docs are at `http://localhost:9000/docs`. Run either the local setup or Docker
 setup at a time; both use these same host ports. Open the frontend, allow camera
 access, and start squatting. The skeleton overlay will track your form in real time.
 
