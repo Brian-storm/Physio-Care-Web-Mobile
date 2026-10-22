@@ -22,6 +22,7 @@
 - 跨帳戶 gateway 及首次 Actions 已於 2026-10-07 驗證成功；版本與 run 連結見 [遷移驗證紀錄](cloudflare-account-migration.md)。後續 docs-only commit 不部署，因此網站 manifest 不一定等於 main 最新文件 commit。
 - 兩位隊友已獲邀加入專用 Account，僅限 `physiocare-demo` Editor；最後檢查為 Pending。原 Account 的兩位成員資格已移除。接受新邀請後才能使用新帳戶管理介面；GitHub Actions 不依賴邀請接受。
 - Demo 使用 synthetic fixtures。FastAPI、登入、資料庫及真實病人儲存尚未接通或部署。MediaPipe 在瀏覽器運作；模型仍由 Google 下載。
+- 靜態 Worker 不提供 session-report API；Pages gateway 會按設計拒絕 POST。若要啟用 AI 摘要，需另行部署可公開 HTTPS 存取的 FastAPI，於 GitHub repository variables 設定 `NEXT_PUBLIC_API_URL` 為後端 base URL，並允許 `https://physio-care.pages.dev` 的 CORS。Workflow 會在 static build 時注入該公開 URL；API key 只放在後端環境變數。未設定時，前端會提示 API 未連接，不會向 Pages gateway 發 POST。
 
 ## 檔案與憑證
 

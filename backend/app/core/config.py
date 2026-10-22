@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = [
         "http://localhost:3000",
+        "https://physio-care.pages.dev",
         "https://physiocare-demo.bswiaosksnxbxhsjwj.workers.dev",
     ]
 

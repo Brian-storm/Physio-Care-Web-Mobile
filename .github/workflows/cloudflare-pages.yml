@@ -37,6 +37,8 @@ jobs:
       - name: Test Pages gateway
         run: npm run test:gateway
       - name: Build static demo
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
         run: npm run build:cloudflare
       - name: Check deployment credentials
         env:

@@ -19,7 +19,18 @@ import { DEMO_SESSION_ID, PHASE1_ROUTES } from '@/constants/phase1Routes';
 import type { Landmark, ExerciseState, ExercisePhase } from '@/types/pose';
 
 // Dev/Prod url made here
-const api_base_url = process.env.NEXT_PUBLIC_API_URL || '';
+const api_base_url = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+
+/** Return whether a separate report API is configured instead of this static origin. */
+function hasExternalReportApi(): boolean {
+  if (!api_base_url || typeof window === 'undefined') return false;
+
+  try {
+    return new URL(api_base_url).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
 
 export interface LiveExerciseAnalysisProps {
   /** Session identifier used to build the link to the result page. */
@@ -385,6 +396,11 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
 
 
   const handleFinishSession = async () => {
+    if (!hasExternalReportApi()) {
+      setReportText('此示範網站尚未連接報告 API，本次訓練數據未送出。請部署 FastAPI 後端，並設定 NEXT_PUBLIC_API_URL 後重新建置。');
+      return;
+    }
+
     // 1. 彈出輸入框讓患者自測疼痛
     const painInput = window.prompt('請評估您今天的疼痛程度 (0-10分，0為無痛，10為劇痛)：', '3');
     
