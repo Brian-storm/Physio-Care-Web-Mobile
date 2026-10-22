@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.api.endpoints import router
 
-app = FastAPI(
+api_app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     docs_url="/docs",
@@ -15,24 +15,26 @@ app = FastAPI(
     redirect_slashes=False,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(router)
+api_app.include_router(router)
 
 
-@app.on_event("startup")
+@api_app.on_event("startup")
 def on_startup():
     """Create all database tables on application startup."""
     init_db()
 
 
-@app.get("/health")
+@api_app.get("/health")
 def health():
     """Health check endpoint."""
     return {"status": "ok", "app": settings.app_name}
+
+
+# Wrap the whole FastAPI app so CORS headers are also present on unhandled errors.
+app = CORSMiddleware(
+    app=api_app,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

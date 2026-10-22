@@ -1,22 +1,11 @@
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+"""PhysioCare — OpenRouter inference integration."""
 
-env_path = Path(__file__).resolve().parent.parent.parent / '.env'
+import httpx
 
-# 👇 暴力檢查區 👇
-print("=== 檢查 .env 檔案 ===", flush=True)
-print(f"檔案是否存在: {env_path.exists()}", flush=True)
-if env_path.exists():
-    print(f"讀取到的實際檔案內容:\n{env_path.read_text(encoding='utf-8')}", flush=True)
-else:
-    # 如果檔案不存在，印出這個資料夾裡到底有哪些檔案
-    print(f"該資料夾裡的檔案列表: {os.listdir(env_path.parent)}", flush=True)
-print("=======================", flush=True)
+from app.core.config import settings
 
-load_dotenv(dotenv_path=env_path, override=True)
+OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions"
+
 
 def generate_session_summary(
     total_reps: int,
@@ -27,17 +16,29 @@ def generate_session_summary(
     flag_count: int,
     pain_score: int | None = None,
 ) -> str:
-    
-    api_key = os.getenv("GEMINI_API_KEY")
-    print(f"📁 讀取路徑: {env_path}", flush=True)
-    print(f"🔑 目前讀到的 Key: {api_key[:10] if api_key else 'None'}", flush=True)
+    """Generate a therapist-facing summary from session metrics.
+
+    Args:
+        total_reps: Number of completed repetitions.
+        total_sets: Number of completed sets.
+        avg_knee_angle: Average knee angle in degrees.
+        avg_torso_lean: Average torso lean angle in degrees.
+        form_score: Session form score from 0 to 100.
+        flag_count: Number of safety alerts triggered.
+        pain_score: Patient-reported pain score from 0 to 10, if provided.
+
+    Returns:
+        A concise Traditional Chinese summary.
+
+    Raises:
+        RuntimeError: If the API key is missing or the response is invalid.
+        httpx.HTTPStatusError: If OpenRouter returns an unsuccessful HTTP status.
+    """
+    api_key = settings.llm_api_key
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY is not set")
-    
-    model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
-    
-    # 建立 Gemini 客戶端
-    client = genai.Client(api_key=api_key)
+        raise RuntimeError("LLM_API_KEY is not set")
+
+    model_name = settings.llm_model_name
 
     prompt = f"""請根據以下患者今日的深蹲訓練數據，用繁體中文寫一段 100 字以內的治療師摘要，語氣專業、客觀，指出優點與需要改進的地方。
 
@@ -51,14 +52,32 @@ def generate_session_summary(
 - 患者自述疼痛指數：{pain_score if pain_score is not None else '未提供'}/10
 """
 
-    # 呼叫 Gemini API
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            system_instruction="你是一位嚴謹、專業的物理治療師助手。",
-            temperature=0.4,
-        )
+    response = httpx.post(
+        OPENROUTER_CHAT_COMPLETIONS_URL,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://physio-care.pages.dev",
+            "X-OpenRouter-Title": "PhysioCare",
+        },
+        json={
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": "你是一位嚴謹、專業的物理治療師助手。"},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.4,
+        },
+        timeout=30.0,
     )
-    
-    return response.text.strip()
+    response.raise_for_status()
+
+    try:
+        summary = response.json()["choices"][0]["message"]["content"]
+    except (IndexError, KeyError, TypeError) as exc:
+        raise RuntimeError("OpenRouter returned an invalid chat completion response") from exc
+
+    if not isinstance(summary, str) or not summary.strip():
+        raise RuntimeError("OpenRouter returned an empty session summary")
+
+    return summary.strip()

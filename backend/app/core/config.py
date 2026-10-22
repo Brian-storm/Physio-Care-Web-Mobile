@@ -23,12 +23,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 hours
 
-    gemini_api_key: str = ""
-    gemini_model_name: str = "gemini-3.8-flash"
+    llm_api_key: str = ""
+    llm_model_name: str = "deepseek/deepseek-v4.1-flash"
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()

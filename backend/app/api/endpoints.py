@@ -1,5 +1,7 @@
 """PhysioCare — REST API endpoints for patients, exercises, sessions, and progress reports."""
 
+import httpx
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.core.database import get_session
@@ -140,13 +142,42 @@ def get_progress_report(patient_id: str, session: Session = Depends(get_session)
 
 @router.post("/report/session", response_model=SessionReportResponse)
 def create_session_report(payload: SessionReportRequest):
-    summary = generate_session_summary(
-        total_reps=payload.total_reps,
-        total_sets=payload.total_sets,
-        avg_knee_angle=payload.avg_knee_angle,
-        avg_torso_lean=payload.avg_torso_lean,
-        form_score=payload.form_score,
-        flag_count=payload.flag_count,
-        pain_score=payload.pain_score,
-    )
+    try:
+        summary = generate_session_summary(
+            total_reps=payload.total_reps,
+            total_sets=payload.total_sets,
+            avg_knee_angle=payload.avg_knee_angle,
+            avg_torso_lean=payload.avg_torso_lean,
+            form_score=payload.form_score,
+            flag_count=payload.flag_count,
+            pain_score=payload.pain_score,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Session summary service is not configured or returned an invalid response.",
+        ) from exc
+    except httpx.HTTPStatusError as exc:
+        status_code = exc.response.status_code
+        if status_code == 401:
+            detail = "OpenRouter rejected the API key; verify LLM_API_KEY."
+        elif status_code == 402:
+            detail = "OpenRouter account has insufficient credits."
+        elif status_code == 403:
+            detail = "OpenRouter denied the request; check key status, spend limits, and model access."
+        elif status_code == 404:
+            detail = "OpenRouter could not find the configured model; verify LLM_MODEL_NAME."
+        elif status_code == 429:
+            detail = "OpenRouter rate limit reached; try again shortly."
+        elif status_code == 502:
+            detail = "OpenRouter could not complete generation; try again shortly."
+        else:
+            detail = f"OpenRouter returned HTTP {status_code}."
+        raise HTTPException(status_code=502, detail=detail) from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not reach OpenRouter; try again shortly.",
+        ) from exc
+
     return SessionReportResponse(summary=summary)

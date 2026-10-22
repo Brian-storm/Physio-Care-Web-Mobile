@@ -415,12 +415,23 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
         }),
       });
 
-      if (!response.ok) throw new Error('API 請求失敗');
+      if (!response.ok) {
+        const errorData: unknown = await response.json().catch(() => null);
+        const detail =
+          typeof errorData === 'object' &&
+          errorData !== null &&
+          'detail' in errorData &&
+          typeof errorData.detail === 'string'
+            ? errorData.detail
+            : `報告服務回應錯誤（HTTP ${response.status}）`;
+        throw new Error(detail);
+      }
       const data = await response.json();
       setReportText(data.summary);
     } catch (error) {
       console.error(error);
-      setReportText('無法生成報告，請檢查網絡或後端連線。');
+      const message = error instanceof Error ? error.message : '未知錯誤';
+      setReportText(`無法生成報告：${message}`);
     } finally {
       setIsGeneratingReport(false);
     }

@@ -93,7 +93,7 @@ All pose estimation runs **100% on-device** via MediaPipe Tasks (WebAssembly/Web
 | **Backend** | FastAPI (Python) | Async, auto-docs, natural fit for data analysis |
 | **Database** | SQLite (dev) / Supabase PostgreSQL (prod) | Simple dev setup, scales to production via Supabase |
 | **Deployment** | Cloudflare Pages (frontend) + Local/Cloud (backend) | Zero-config, hackathon-friendly |
-| **GenAI** | Google Gemini API (`google-genai`) | Generates professional clinical summaries based on objective session data |
+| **GenAI** | OpenRouter API (DeepSeek V4.1 Flash) | Generates professional clinical summaries based on objective session data |
 
 ---
 
@@ -129,7 +129,7 @@ PhysioCare/
 │   │   │   └── database.py         # Engine + session
 │   │   ├── models/models.py        # Patient, Exercise, Session, FlaggedClip
 │   │   ├── schemas/schemas.py      # Pydantic request/response schemas
-|   |   ├── services/llm_service.py # Google Gemini API integration
+|   |   ├── services/llm_service.py # OpenRouter API integration
 │   │   └── api/endpoints.py        # REST endpoints
 │   ├── requirements.txt
 │   └── Dockerfile
@@ -169,7 +169,7 @@ If the danger score reaches **50%**, it triggers:
 
 ### 4. GenAI Clinical Report
 
-After each session, the patient is prompted to self-report their pain score (0-10). The frontend calculates the **average form score across the entire session** (ignoring empty frames) and sends the session metrics (reps, sets, average angles, pain score, alert count) to the FastAPI backend. The backend uses the **Google Gemini API** to generate a professional, context-aware therapist summary.
+After each session, the patient is prompted to self-report their pain score (0-10). The frontend calculates the **average form score across the entire session** (ignoring empty frames) and sends the session metrics (reps, sets, average angles, pain score, alert count) to the FastAPI backend. The backend uses the **OpenRouter API** with DeepSeek V4.1 Flash to generate a professional, context-aware therapist summary.
 
 ### 5. Therapist Dashboard
 
@@ -214,15 +214,15 @@ python -m venv venv
 # source venv/bin/activate    # macOS / Linux
 pip install -r requirements.txt
 
-# Create a .env file in the backend directory and add your Gemini API Key:
-# GEMINI_API_KEY=your_api_key_here
-# GEMINI_MODEL_NAME=gemini-3.8-flash
+# Copy backend/.env.example to backend/.env and add your OpenRouter API key:
+# LLM_API_KEY=your_openrouter_api_key_here
+# LLM_MODEL_NAME=deepseek/deepseek-v4.1-flash
 
-uvicorn app.main:app --reload --port 9000
+uvicorn app.main:app --reload --port 8000
 ```
 
 The frontend is at `http://localhost:3000`; the backend API docs are at
-`http://localhost:9000/docs`.
+`http://localhost:8000/docs`.
 
 #### Run with Docker
 
@@ -233,7 +233,7 @@ docker compose up --build
 ```
 
 With Docker Compose, the frontend is at `http://localhost:3000` and the backend
-API docs are at `http://localhost:9000/docs`. Run either the local setup or Docker
+API docs are at `http://localhost:8000/docs`. Run either the local setup or Docker
 setup at a time; both use these same host ports. Open the frontend, allow camera
 access, and start squatting. The skeleton overlay will track your form in real time.
 
