@@ -12,9 +12,10 @@
     "build:cloudflare": "node scripts/build-cloudflare.mjs",
     "preview:cloudflare": "npm run build:cloudflare && wrangler dev --config wrangler.worker.jsonc",
     "deploy:cloudflare": "npm run deploy:worker",
-    "deploy:worker": "npm run build:cloudflare && wrangler deploy --config wrangler.worker.jsonc",
+    "deploy:worker": "npm run build:cloudflare && node scripts/scoped-wrangler.mjs",
     "deploy:gateway": "cd gateway && wrangler pages deploy --project-name=physio-care --branch=main",
     "test:gateway": "node --test gateway/tests/*.test.mjs",
+    "test:deployment": "node --test scripts/tests/*.test.mjs",
     "preview:gateway": "cd gateway && wrangler pages dev"
   },
   "dependencies": {

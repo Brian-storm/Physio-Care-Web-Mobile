@@ -50,7 +50,7 @@
 
 1. Feature branch → PR review → merge `main`。
 2. `frontend/**` 或 workflow 修改觸發部署；docs-only 不觸發。亦可手動 Run workflow 選 main。
-3. Node 22、`npm ci`、gateway tests、static build 通過後，Wrangler 使用新 Account Secrets 部署。
+3. Node 22、`npm ci`、gateway／deployment tests、static build 通過後，記錄回滾版本 UUID，再由 Wrangler 使用新 Account Secrets 部署。
 4. Workflow 經公開 Pages URL 驗證 `/deployment.json` 的 commit 等於該次 `github.sha`，且 gateway 為 `worker-http-v2`。成功才代表公開入口同步；仍不是鏡頭實機驗收。
 
 標準 Ubuntu runner、`contents: read`、checkout 不持久保存 Git credential、15 分鐘 timeout、production 串行化。Secret 只注入 credential 檢查與部署步驟。可改 workflow 的人有機會使用或外傳 Secret，所以 repo write 權限仍須只給可信任者。公開 repo 不等於公眾能直接讀 Secret。
@@ -65,14 +65,25 @@ Repository collaborator 可設定 repository Secrets；environment 保護及原�
 cd frontend
 npm ci
 npm run test:gateway
+npm run test:deployment
 npm run build:cloudflare
 npx wrangler deployments list --config wrangler.worker.jsonc
-npx wrangler deploy --config wrangler.worker.jsonc --dry-run
+node scripts/scoped-wrangler.mjs --dry-run
 # 確認只有 ASSETS、指定新 Account 和正確 Worker 後
-npx wrangler deploy --config wrangler.worker.jsonc
+node scripts/scoped-wrangler.mjs
 ```
 
 `deployment.json` 記錄 HEAD 與 UTC build 時間，不記 dirty flag；必須從乾淨、已 review 的程式建置。保存良好 Worker version UUID 作 rollback。
+
+## 限定 Worker Token 的暫時相容修正（2026-10-23）
+
+Dashboard 更新 Worker 後，Wrangler 4.148.0 會額外讀取遠端設定作比較。限定 Worker Editor Token 可能無權讀取 routes／custom domains metadata，造成 `Unable to fetch bindings, routes, or services metadata from the dashboard`，在上傳 assets 前停止。上游追蹤：[workers-sdk #16390](https://github.com/cloudflare/workers-sdk/issues/16390)。這個 workflow 使用 `wrangler.worker.jsonc`，不是 backend 或 gateway 的 `wrangler.toml`。
+
+`scripts/scoped-wrangler.mjs` 使用已鎖定版本和 SHA-256 驗證的 Wrangler bundle，建立暫存副本執行正常 deploy，完成後刪除；不修改安裝的 CLI。只有 `physiocare-demo`、`deploy`、沒有任何 route／custom domain 設定時，兩項 routing 比較 GET 的 HTTP 403／Cloudflare code 10000 才可略過。成功讀取的 routing metadata 仍會比較；bindings、subdomain、service metadata、schedules 及其他錯誤仍會中止部署。此版本在 routes 為空時不發布 routes／custom domains，因此不會用空陣列清除遠端路由。Token 權限不變。
+
+`npm run test:deployment` 以實際 pinned bundle 的函式驗證原始失敗、限定例外及其餘錯誤。更新 Wrangler 時必須重新檢視上游問題和 workaround；版本或 bundle 不符會停止。上游修復後可移除此 wrapper，改回標準 deploy。
+
+Actions 在部署前將原有 Worker version UUID 寫入 log 和 job summary，供 `npx wrangler rollback <UUID> --config wrangler.worker.jsonc` 使用。Git 修正可用 `git revert <fix-commit>` 回復；回復原始 deploy 指令可能再次遇到原有失敗。這項修正不部署 FastAPI，亦不會連接摘要 API。
 
 ## Gateway 維護（owner）
 
