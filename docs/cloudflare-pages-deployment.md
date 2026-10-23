@@ -1,10 +1,12 @@
 # Cloudflare 部署指南：專用 Account Worker＋固定 Pages 入口
 
-隊友及 AI agent 的操作入口。更新：2026-10-07。執行前仍須核對 Git、線上版本及有效權限。歷史報告不是目前配置。
+隊友及 AI agent 的操作入口。更新：2026-10-23。執行前仍須核對 Git、線上版本及有效權限。歷史報告不是目前配置。
 
 ## 架構
 
 `https://physio-care.pages.dev` → owner 原 Account 的 Pages HTTPS gateway → 團隊專用 Account 的 `physiocare-demo` Worker → Next.js static export `ASSETS`。
+
+AI 報告：瀏覽器 → 專用 Worker HTTPS origin 的 `/api/v1/report/session` → OpenRouter。API 不經只容許 GET/HEAD 的 Pages gateway。
 
 - 日常 release 只更新新 Account Worker。Pages 不存 app snapshot；不可把 `frontend/out` 上傳到現有 Pages。
 - 舊入口由 owner 管理，CI 不取得舊 Account 的 credential。兩個 Account 不能沿用 Service Binding。
@@ -21,19 +23,24 @@
 - Repository Secrets 已設定；Token 到期日為 2027-01-06，需到期前更換並驗證 release。
 - 跨帳戶 gateway 及首次 Actions 已於 2026-10-07 驗證成功；版本與 run 連結見 [遷移驗證紀錄](cloudflare-account-migration.md)。後續 docs-only commit 不部署，因此網站 manifest 不一定等於 main 最新文件 commit。
 - 兩位隊友已獲邀加入專用 Account，僅限 `physiocare-demo` Editor；最後檢查為 Pending。原 Account 的兩位成員資格已移除。接受新邀請後才能使用新帳戶管理介面；GitHub Actions 不依賴邀請接受。
-- Demo 使用 synthetic fixtures。FastAPI、登入、資料庫及真實病人儲存尚未接通或部署。MediaPipe 在瀏覽器運作；模型仍由 Google 下載。
-- 靜態 Worker 不提供 session-report API；Pages gateway 會按設計拒絕 POST。若要啟用 AI 摘要，需另行部署可公開 HTTPS 存取的 FastAPI，於 GitHub repository variables 設定 `NEXT_PUBLIC_API_URL` 為後端 base URL，並允許 `https://physio-care.pages.dev` 的 CORS。Workflow 會在 static build 時注入該公開 URL；API key 只放在後端環境變數。未設定時，前端會提示 API 未連接，不會向 Pages gateway 發 POST。
+- Demo 使用 synthetic fixtures。完整 FastAPI、登入、資料庫及真實病人儲存尚未接通或部署；此次只部署無狀態 report API。MediaPipe 在瀏覽器運作；模型仍由 Google 下載。
+- `frontend/worker/report-api.mjs` 在既有 Worker 提供 report API，沿用 Python 後端的七項數字欄位與 `{ "summary": "..." }` 回應格式。`backend/wrangler.toml` 是未完成的舊 Python 部署設定，不是此 API 的發布入口。
+- GitHub Secret `PHYSIOCARE_REPORT_API_URL` 儲存私下核實的 Worker HTTPS origin，build 時映射為 `NEXT_PUBLIC_API_URL`，避免 owner-specific hostname 出現在 Actions logs 或 Git 檔案。這個 URL 仍會出現在瀏覽器 bundle，並不是認證密鑰。Workflow 保留既有同名 repository variable 的 fallback。
+- OpenRouter key 只存為 Worker 的 `LLM_API_KEY` secret，沿用既有 `deepseek/deepseek-v4.1-flash` 模型；不是 Gemini。不要把模型 API key 放入前端或 GitHub public variables。
 
 ## 檔案與憑證
 
 | 檔案 | 用途 |
 | --- | --- |
 | `frontend/wrangler.worker.jsonc` | 新 Account 的 Worker、ASSETS 與 404 設定；沒有 Account ID |
-| `frontend/worker/index.js` | ASSETS request handler |
+| `frontend/worker/index.js` | ASSETS 與 `/api/*` routing |
+| `frontend/worker/report-api.mjs` | 輸入驗證、CORS、限流、OpenRouter 報告與健康檢查 |
+| `frontend/worker/tests/report-api.test.mjs` | 報告 API contract 與失敗情境測試 |
 | `frontend/gateway/wrangler.toml` | 舊 Account Pages gateway；不含 Service Binding |
 | `frontend/gateway/public/_worker.js` | 固定 HTTPS proxy |
 | `frontend/gateway/tests/gateway.test.mjs` | 轉接、隔離、redirect、錯誤及 method 測試 |
 | `frontend/scripts/build-cloudflare.mjs` | static export 及 `deployment.json` |
+| `frontend/scripts/verify-report-api.mjs` | 真實部署上的 synthetic report 驗證，不輸出報告內容 |
 | `frontend/public/_headers` | COOP/COEP 等 response headers |
 | `.github/workflows/cloudflare-pages.yml` | 名稱保留 pages，實際部署 Worker 並驗證公開 gateway commit |
 
@@ -41,6 +48,8 @@
 | --- | --- |
 | 新 Account ID | GitHub Secret `CLOUDFLARE_ACCOUNT_ID`；手動部署用同名環境變數 |
 | 新 Account Worker Editor Token | GitHub Secret `PHYSIOCARE_WORKER_API_TOKEN`；手動部署映射為 `CLOUDFLARE_API_TOKEN` |
+| Report API HTTPS origin | GitHub Secret `PHYSIOCARE_REPORT_API_URL`；build 時映射為 `NEXT_PUBLIC_API_URL` |
+| OpenRouter API key | 專用 Worker 的 `LLM_API_KEY` secret；不匯出其值 |
 | 新 Worker HTTPS origin | 舊 Pages production 和 preview 各自的 `PHYSIOCARE_ORIGIN` secret_text；僅為私隱用途，origin 不是密鑰 |
 | 舊 Account ID／owner credential | 只在 owner 本機處理 gateway；不存入此 repo 的 Actions |
 
@@ -50,8 +59,8 @@
 
 1. Feature branch → PR review → merge `main`。
 2. `frontend/**` 或 workflow 修改觸發部署；docs-only 不觸發。亦可手動 Run workflow 選 main。
-3. Node 22、`npm ci`、gateway／deployment tests、static build 通過後，記錄回滾版本 UUID，再由 Wrangler 使用新 Account Secrets 部署。
-4. Workflow 經公開 Pages URL 驗證 `/deployment.json` 的 commit 等於該次 `github.sha`，且 gateway 為 `worker-http-v2`。成功才代表公開入口同步；仍不是鏡頭實機驗收。
+3. Node 22、`npm ci`、gateway／deployment／report tests、static build 通過後，記錄回滾版本 UUID，再由 Wrangler 使用新 Account Secrets 部署。
+4. Workflow 經公開 Pages URL 驗證 `/deployment.json` 的 commit 等於該次 `github.sha`，且 gateway 為 `worker-http-v2`。再向 API 進行 health、CORS preflight 及一個純合成數字報告請求，確認供應商實際生成摘要。每次此驗證會產生一次 OpenRouter 推論用量；不啟用付費方案或更改額度。成功仍不是鏡頭實機驗收。
 
 標準 Ubuntu runner、`contents: read`、checkout 不持久保存 Git credential、15 分鐘 timeout、production 串行化。Secret 只注入 credential 檢查與部署步驟。可改 workflow 的人有機會使用或外傳 Secret，所以 repo write 權限仍須只給可信任者。公開 repo 不等於公眾能直接讀 Secret。
 
@@ -66,10 +75,12 @@ cd frontend
 npm ci
 npm run test:gateway
 npm run test:deployment
+npm run test:worker
+# 私下提供已核實的 NEXT_PUBLIC_API_URL，再 build
 npm run build:cloudflare
 npx wrangler deployments list --config wrangler.worker.jsonc
 node scripts/scoped-wrangler.mjs --dry-run
-# 確認只有 ASSETS、指定新 Account 和正確 Worker 後
+# 確認 ASSETS、兩個 report rate-limit bindings、指定新 Account 和正確 Worker 後
 node scripts/scoped-wrangler.mjs
 ```
 
@@ -83,7 +94,18 @@ Dashboard 更新 Worker 後，Wrangler 4.148.0 會額外讀取遠端設定作比
 
 `npm run test:deployment` 以實際 pinned bundle 的函式驗證原始失敗、限定例外及其餘錯誤。更新 Wrangler 時必須重新檢視上游問題和 workaround；版本或 bundle 不符會停止。上游修復後可移除此 wrapper，改回標準 deploy。
 
-Actions 在部署前將原有 Worker version UUID 寫入 log 和 job summary，供 `npx wrangler rollback <UUID> --config wrangler.worker.jsonc` 使用。Git 修正可用 `git revert <fix-commit>` 回復；回復原始 deploy 指令可能再次遇到原有失敗。這項修正不部署 FastAPI，亦不會連接摘要 API。
+Actions 在部署前將原有 Worker version UUID 寫入 log 和 job summary，供 `npx wrangler rollback <UUID> --config wrangler.worker.jsonc` 使用。Git 修正可用 `git revert <fix-commit>` 回復；回復原始 deploy 指令可能再次遇到原有失敗。這項 Wrangler 修正本身不部署 FastAPI；報告 API 由後續 Worker handler 實作。
+
+## Report API 操作
+
+- `GET /api/health`：key 和 rate-limit bindings 就緒時回 200；這只檢查設定存在，實際模型可用性由 synthetic POST 驗證。
+- `POST /api/v1/report/session`：只接受 JSON 數字欄位 `total_reps`、`total_sets`、`avg_knee_angle`、`avg_torso_lean`、`form_score`、`flag_count`、`pain_score`。沒有患者識別、影片、圖片、自由文字 prompt 或資料庫儲存。未知欄位被拒絕。
+- Request 上限 2 KiB；次數／警報 0–10000、組數 0–1000、角度 0–180、品質 0–100、疼痛 0–10。未提供疼痛時不補造分數。前端沒有分析 frame 或取消疼痛輸入時不發送請求。次數累計所有組，組數只計已完成的組；重設分析亦清除報告的累積數據。
+- CORS 允許正式 Pages origin 及 API 自身 origin，拒絕其他 browser origin。這是匿名 demo API，CORS 不是身份驗證。每個 Cloudflare location 約每 IP 5 次／分鐘、整體 30 次／分鐘；計數是近似且分區的，並非全域嚴格費用上限。Provider 輸出最多 512 tokens、等待上限 30 秒，不自動重試。
+- API 回應一律 `no-store`，不輸出 request、secret 或 provider 原始 response。401／402 等供應商錯誤轉為經清理的 502；連線或缺少設定回 503；本機限流回 429。
+- 可執行 `Check report API configuration` Actions，只檢查專用 Worker 的 `LLM_API_KEY` 名稱是否存在，不讀取秘密值。若需要更換 key，由有權管理此 Worker 的人透過 Cloudflare secret 設定；不要貼入 chat、log 或 Git。
+- 手動驗證以私下設定的 `REPORT_API_URL` 執行 `node scripts/verify-report-api.mjs`。它會發送一份合成數字資料，並檢查 CORS 和實際摘要生成。
+- 回滾 Worker 會連同該版本的前端資產一起回復；保留目前和前一版 UUID。移除 report 功能時亦需恢復相應的 CI 驗證步驟及 build URL 設定。
 
 ## Gateway 維護（owner）
 
@@ -119,7 +141,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://physio-care.pages.dev/missing-
 - Worker 問題：在新 Account 用 `wrangler rollback <已核實版本UUID> --config wrangler.worker.jsonc`，然後驗證入口。
 - Gateway 問題：owner 回復已知良好 Pages production。若回復舊 v1，須核對該部署 `PHYSIOCARE` binding 和舊 Worker 仍存在；v1 不會隨新 Account 更新。
 - CI 成功部署但公開驗證失敗：先比較新 Worker／Pages 的 deployment.json 及 gateway header，檢查 origin；不要盲目重跑或擴權。
-- 503：檢查 origin、上游可用性。502：檢查非預期 redirect。405：目前只支援 static reads；新增 API／登入需另作設計。
+- Gateway 503：檢查 origin、上游可用性。Gateway 502：檢查非預期 redirect。Pages gateway 的 405：只支援 GET/HEAD，report POST 必須直接呼叫已設定的 Worker API origin。
 
 ## 私隱及歷史
 

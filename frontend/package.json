@@ -16,6 +16,7 @@
     "deploy:gateway": "cd gateway && wrangler pages deploy --project-name=physio-care --branch=main",
     "test:gateway": "node --test gateway/tests/*.test.mjs",
     "test:deployment": "node --test scripts/tests/*.test.mjs",
+    "test:worker": "node --test worker/tests/*.test.mjs",
     "preview:gateway": "cd gateway && wrangler pages dev"
   },
   "dependencies": {

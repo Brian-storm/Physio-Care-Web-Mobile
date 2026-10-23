@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCamera } from '@/hooks/useCamera';
 import { usePose } from '@/hooks/usePose';
+import { prepareSessionReport, requestSessionReport } from '@/services/sessionReport';
 import {
   SquatEngine,
   SQUAT_BOTTOM_ANGLE_THRESHOLD,
@@ -18,15 +19,15 @@ import {
 import { DEMO_SESSION_ID, PHASE1_ROUTES } from '@/constants/phase1Routes';
 import type { Landmark, ExerciseState, ExercisePhase } from '@/types/pose';
 
-// Dev/Prod url made here
-const api_base_url = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
 
-/** Return whether a separate report API is configured instead of this static origin. */
-function hasExternalReportApi(): boolean {
-  if (!api_base_url || typeof window === 'undefined') return false;
+/** Require a configured HTTPS API, with HTTP allowed only for local development. */
+function hasReportApi(): boolean {
+  if (!apiBaseUrl) return false;
 
   try {
-    return new URL(api_base_url).origin !== window.location.origin;
+    const url = new URL(apiBaseUrl);
+    return url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname));
   } catch {
     return false;
   }
@@ -122,9 +123,6 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
     frameCount: 0,
     flagCount: 0,
   });
-
-  // 用來避免同一幀重複計算警報次數
-  const prevFlaggedForStatsRef = useRef(false);
 
   // 控制報告 Modal 的顯示與內容
   const [reportText, setReportText] = useState<string | null>(null);
@@ -396,56 +394,25 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
 
 
   const handleFinishSession = async () => {
-    if (!hasExternalReportApi()) {
-      setReportText('此示範網站尚未連接報告 API，本次訓練數據未送出。請部署 FastAPI 後端，並設定 NEXT_PUBLIC_API_URL 後重新建置。');
+    if (isGeneratingReport) return;
+    if (!hasReportApi()) {
+      setReportText('報告服務尚未連接，本次訓練數據未送出。請稍後再試。');
       return;
     }
-
-    // 1. 彈出輸入框讓患者自測疼痛
-    const painInput = window.prompt('請評估您今天的疼痛程度 (0-10分，0為無痛，10為劇痛)：', '3');
-    
-    // 2. 處理輸入值（防呆：如果按取消、輸入空白或亂碼，就預設為 3 分）
-    let painScore = painInput !== null ? parseInt(painInput, 10) : 3;
-    if (isNaN(painScore)) painScore = 3;
-    painScore = Math.max(0, Math.min(10, painScore)); // 確保在 0-10 之間
-
-    setIsGeneratingReport(true);
     const stats = sessionStatsRef.current;
-    const avgKnee = stats.frameCount > 0 ? stats.kneeSum / stats.frameCount : 0;
-    const avgTorso = stats.frameCount > 0 ? stats.torsoSum / stats.frameCount : 0;
-
-    const avgFormScore = stats.frameCount > 0 ? Math.round(stats.formScoreSum / stats.frameCount) : 100;
-
+    if (stats.frameCount < 1) {
+      setReportText('尚未有動作分析數據，請先完成訓練再生成摘要。');
+      return;
+    }
+    const painInput = window.prompt('請評估您今天的疼痛程度 (0-10分，0為無痛，10為劇痛)：', '');
     try {
-      const response = await fetch(`${api_base_url}/api/v1/report/session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          total_reps: exerciseState.repCount,
-          total_sets: exerciseState.setCount,
-          avg_knee_angle: avgKnee,
-          avg_torso_lean: avgTorso,
-          form_score: avgFormScore,
-          flag_count: stats.flagCount,
-          pain_score: painScore, // 👈 這裡改成傳入剛剛獲取的分數
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData: unknown = await response.json().catch(() => null);
-        const detail =
-          typeof errorData === 'object' &&
-          errorData !== null &&
-          'detail' in errorData &&
-          typeof errorData.detail === 'string'
-            ? errorData.detail
-            : `報告服務回應錯誤（HTTP ${response.status}）`;
-        throw new Error(detail);
-      }
-      const data = await response.json();
-      setReportText(data.summary);
+      const payload = prepareSessionReport(
+        stats, exerciseState.repCount, exerciseState.setCount, painInput, exerciseState.targetReps,
+      );
+      if (!payload) return;
+      setIsGeneratingReport(true);
+      setReportText(await requestSessionReport(apiBaseUrl, payload));
     } catch (error) {
-      console.error(error);
       const message = error instanceof Error ? error.message : '未知錯誤';
       setReportText(`無法生成報告：${message}`);
     } finally {
@@ -650,18 +617,21 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
           )}
 
           <div className="mt-auto grid gap-3 pt-6">
-            {/* Reset the engine's counters and state, then publish a fresh display snapshot. */}
+            {/* Reset both displayed counters and the accumulated report measurements. */}
             <button
               onClick={() => {
                 engineRef.current.reset();
+                sessionStatsRef.current = { kneeSum: 0, torsoSum: 0, formScoreSum: 0, frameCount: 0, flagCount: 0 };
+                lastSpokenRef.current = null;
+                setReportText(null);
                 setExerciseState(engineRef.current.getInitialState());
               }}
-              className="min-h-11 rounded-sm bg-neutral-700 px-4 text-pc-14 font-semibold hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
+              disabled={isGeneratingReport}
+              className="min-h-11 rounded-sm bg-neutral-700 px-4 text-pc-14 font-semibold hover:bg-neutral-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info-500"
             >
               重設本次分析
             </button>
-            {/* Navigate to the demo result page; this action does not persist the
-              metrics currently shown in this live analysis component. */}
+            {/* Generate an observation from numerical measurements at this point in the session. */}
             <button
               onClick={handleFinishSession}
               disabled={isGeneratingReport}
@@ -669,7 +639,7 @@ export function LiveExerciseAnalysis({ sessionId }: LiveExerciseAnalysisProps): 
             >
               {isGeneratingReport ? '生成報告中...' : '結束並生成報告'}
             </button>
-            <p className="text-pc-12 leading-relaxed text-ink-muted">點擊結束後，AI 將根據本次訓練數據生成專屬治療師報告。</p>
+            <p className="text-pc-12 leading-relaxed text-ink-muted">生成摘要時，訓練數值及疼痛評分會傳送至 OpenRouter AI 服務；不會傳送影像。摘要供您與治療師參考。</p>
           </div>
         </div>
       </div>
