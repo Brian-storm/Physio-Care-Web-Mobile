@@ -36,6 +36,7 @@ AI 報告：瀏覽器 → 專用 Worker HTTPS origin 的 `/api/v1/report/session
 | `frontend/worker/index.js` | ASSETS 與 `/api/*` routing |
 | `frontend/worker/report-api.mjs` | 輸入驗證、CORS、限流、OpenRouter 報告與健康檢查 |
 | `frontend/worker/tests/report-api.test.mjs` | 報告 API contract 與失敗情境測試 |
+| `frontend/worker/tests/report-runtime.test.mjs` | workerd 實際 runtime、限流 binding、provider fetch 及 redirect 拒絕驗證 |
 | `frontend/gateway/wrangler.toml` | 舊 Account Pages gateway；不含 Service Binding |
 | `frontend/gateway/public/_worker.js` | 固定 HTTPS proxy |
 | `frontend/gateway/tests/gateway.test.mjs` | 轉接、隔離、redirect、錯誤及 method 測試 |
@@ -103,6 +104,7 @@ Actions 在部署前將原有 Worker version UUID 寫入 log 和 job summary，�
 - Request 上限 2 KiB；次數／警報 0–10000、組數 0–1000、角度 0–180、品質 0–100、疼痛 0–10。未提供疼痛時不補造分數。前端沒有分析 frame 或取消疼痛輸入時不發送請求。次數累計所有組，組數只計已完成的組；重設分析亦清除報告的累積數據。
 - CORS 允許正式 Pages origin 及 API 自身 origin，拒絕其他 browser origin。這是匿名 demo API，CORS 不是身份驗證。每個 Cloudflare location 約每 IP 5 次／分鐘、整體 30 次／分鐘；計數是近似且分區的，並非全域嚴格費用上限。Provider 輸出最多 512 tokens、等待上限 30 秒，不自動重試。
 - API 回應一律 `no-store`，不輸出 request、secret 或 provider 原始 response。401／402 等供應商錯誤轉為經清理的 502；連線或缺少設定回 503；本機限流回 429。
+- Worker 的 provider fetch 使用 `redirect: "manual"` 並拒絕非 2xx；workerd 不支援瀏覽器的 `redirect: "error"`，會在發送前拋錯。Runtime 測試使用 Wrangler 隨附的 Miniflare 和實際 Worker 模組，只替換外部 provider，不讀取正式 key。發布後的 health／preflight 可短暫重試等待傳播，推論 POST 只執行一次。
 - 可執行 `Check report API configuration` Actions，只檢查專用 Worker 的 `LLM_API_KEY` 名稱是否存在，不讀取秘密值。若需要更換 key，由有權管理此 Worker 的人透過 Cloudflare secret 設定；不要貼入 chat、log 或 Git。
 - 手動驗證以私下設定的 `REPORT_API_URL` 執行 `node scripts/verify-report-api.mjs`。它會發送一份合成數字資料，並檢查 CORS 和實際摘要生成。
 - 回滾 Worker 會連同該版本的前端資產一起回復；保留目前和前一版 UUID。移除 report 功能時亦需恢復相應的 CI 驗證步驟及 build URL 設定。

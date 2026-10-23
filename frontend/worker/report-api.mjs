@@ -109,7 +109,8 @@ async function generateSummary(metrics, env) {
         reasoning: { enabled: false },
       }),
       signal: AbortSignal.timeout(30000),
-      redirect: 'error',
+      // workerd supports manual/follow only; non-2xx responses below reject redirects.
+      redirect: 'manual',
     });
     if (!upstream.ok) {
       await upstream.body?.cancel();
